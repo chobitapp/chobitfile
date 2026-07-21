@@ -2,13 +2,26 @@
 
 最終更新: 2026-07-21
 
-Web 版とロジックを共通化した CLI 版の形式・配布・リポジトリ構成の検討メモ。
-実装仕様の正本ではなく、方針決定用の提案である。
+Web 版とロジックを共通化した CLI 版の形式・配布・リポジトリ構成。
 
 関連:
 
 - [MVP 仕様](./mvp-spec.md)
 - [サービス構想メモ](./service-concept.md)
+
+---
+
+## 0. 決定事項（2026-07-21）
+
+| 項目 | 決定 |
+|---|---|
+| npm 公開 | **する**（パッケージ名 `chobitfile`、`npx chobitfile`） |
+| サイズ上限 | **Web と同じ**（最大 `20 MiB + 1` = `MAX_TARGET_BYTES`） |
+| 任意サイズ | **CLI のみ**（`--size 2mb` / `512kb` / `--bytes N`）。Web はプリセット維持 |
+| 一括生成 | **現時点では不要**（単発 `generate` のみ） |
+| デフォルト引数 | Web と同じ（`png` / `1mb` / `exact`） |
+| 実装場所 | `src/cli/*`（生成は既存 `src/generators` + `src/lib` を共有） |
+| 配布物 | esbuild バンドル `dist-cli/index.js`（実行時依存ゼロ） |
 
 ---
 
@@ -339,28 +352,36 @@ Web は UI で 20MB まで。CLI は `--bytes` で実質無制限になり得る
 
 ---
 
-## 9. 推奨まとめ
+## 9. 推奨まとめ（採用済み）
 
-| 項目 | 推奨 |
+| 項目 | 方針 |
 |---|---|
-| ロジック共有 | TypeScript の pure コアを切り出し。WASM/別言語にしない |
-| リポジトリ | 第一段は単一パッケージ + `src/core` / `src/web` / `src/cli` |
-| CLI UX | `chobitfile generate -t … -s …|-b …|--bytes … -o …`。非対話・スクリプト優先 |
-| Web との差分 | CLI は任意サイズ・一括・stdout。画像ラベルはデフォルトなし |
-| 配布 | 第一段は **npm + npx/pnpm dlx**。バイナリ/Homebrew は需要後 |
-| 上限 | 明示上限 + 上書き保護。巨大ファイルはメモリ注意をドキュメント化 |
+| ロジック共有 | 既存 generators / lib を CLI から直接利用。WASM/別言語にしない |
+| リポジトリ | 単一パッケージ。`src/cli` を追加（本格 monorepo 分割は後回し） |
+| CLI UX | `chobitfile generate -t … -s … / --bytes … -b … -o …` |
+| Web との差分 | CLI のみ任意サイズ・stdout。一括は見送り。画像ラベルなし |
+| 配布 | **npm + npx/pnpm dlx** |
+| 上限 | Web と同じ `MAX_TARGET_BYTES`。上書きは `--force` |
 
 ---
 
-## 10. 決定が必要な論点
+## 10. 公開手順
 
-実装に入る前に固めるとよい点:
+```bash
+pnpm test
+pnpm build:cli
+# npm login 済みであること
+npm publish
+```
 
-1. **npm 公開するか**（個人利用の bin だけ / 公開パッケージ）
-2. **パッケージ名**（`chobitfile` vs スコープ付き）
-3. **CLI のデフォルト上限**（20MB のまま / 100MB / 別）
-4. **任意サイズを Web にも後から足すか**（CLI のみでよいか）
-5. **一括生成を MVP に含めるか**（単発だけ先でも価値はある）
+`prepublishOnly` で test + `build:cli` が走る。
+
+利用側:
+
+```bash
+npx chobitfile generate -t pdf -s 10mb -o ./10mb.pdf
+pnpm dlx chobitfile -t png --bytes 8192 -o tiny.png
+```
 
 ---
 
@@ -369,3 +390,4 @@ Web は UI で 20MB まで。CLI は `--bytes` で実質無制限になり得る
 | 日付 | 内容 |
 |---|---|
 | 2026-07-21 | 初版。Web/CLI 共有境界・CLI UX・配布・段階案を整理 |
+| 2026-07-21 | 決定事項を固定し CLI MVP を実装（npm 公開・上限 Web 準拠・任意サイズ CLI のみ・一括なし） |

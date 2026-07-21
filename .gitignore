@@ -1,5 +1,7 @@
 node_modules/
 dist/
+dist-cli/
+*.tgz
 .wrangler/
 bench/last-results.json
 bench/moonbit_bench.wasm

@@ -1,10 +1,38 @@
 {
   "name": "chobitfile",
-  "private": true,
+  "version": "0.1.0",
+  "description": "指定サイズ・形式のダミーファイルをローカル生成する CLI / Web ツール",
   "type": "module",
+  "bin": {
+    "chobitfile": "./dist-cli/index.js"
+  },
+  "files": [
+    "dist-cli",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zaru/chobitfile.git"
+  },
+  "homepage": "https://chobitfile.nanabit.dev",
+  "keywords": [
+    "dummy-file",
+    "fixture",
+    "upload-test",
+    "png",
+    "pdf",
+    "cli"
+  ],
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:cli": "esbuild src/cli/index.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist-cli/index.js --banner:js=\"#!/usr/bin/env node\"",
+    "prepublishOnly": "pnpm test && pnpm build:cli",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -18,20 +46,19 @@
   },
   "devDependencies": {
     "@astryxdesign/cli": "^0.1.6",
+    "@astryxdesign/core": "^0.1.6",
+    "@astryxdesign/theme-neutral": "^0.1.6",
     "@biomejs/biome": "^2.5.4",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "esbuild": "^0.27.2",
+    "nuqs": "^2.9.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "typescript": "^7.0.2",
     "vite": "^8.1.5",
     "vitest": "^4.1.10",
     "wrangler": "^4.112.0"
-  },
-  "dependencies": {
-    "@astryxdesign/core": "^0.1.6",
-    "@astryxdesign/theme-neutral": "^0.1.6",
-    "nuqs": "^2.9.1",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
   }
 }
