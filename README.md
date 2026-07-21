@@ -1,31 +1,31 @@
 # chobitfile
 
-指定サイズ・形式のダミーファイルを生成するツール。
+Generate dummy files of a given size and format.
 
-対応形式: PNG / JPEG / DOCX / XLSX / PPTX / PDF / TXT / CSV / JSON
-サイズ上限: 20 MB
+Formats: PNG / JPEG / DOCX / XLSX / PPTX / PDF / TXT / CSV / JSON  
+Max size: 20 MB
 
-- Web: https://chobitfile.nanabit.dev （日本語 / 英語。初期言語はブラウザ設定。`?lang=en` で固定可）
-- CLI: `chobitfile`（メッセージは英語固定）
+- Web: https://chobitfile.nanabit.dev (Japanese / English; initial language follows the browser. Pin with `?lang=en`)
+- CLI: `chobitfile` (messages are English only)
 
 ## CLI
 
 ```bash
-# 10MBのPDFファイルを生成
+# Generate a 10MB PDF
 npx chobitfile -t pdf -s 10mb -o ./10mb.pdf
 
-# グローバルにインストール
+# Install globally
 npm i -g chobitfile
 ```
 
-| オプション       | 説明                                                                          |
-| ---------------- | ----------------------------------------------------------------------------- |
-| `-t, --type`     | 形式（default: `png`）                                                        |
-| `-s, --size`     | `10mb` / `512kb` など任意のサイズ                                             |
-| `-b, --boundary` | `exact` ぴったり / `under` 1byte少ない / `over` 1byte多い（default: `exact`） |
-| `--bytes`        | バイト数で直接指定（`-s` / `-b` と排他）                                      |
-| `-o, --output`   | 出力パス。`-` で stdout                                                       |
-| `-f, --force`    | 上書き                                                                        |
-| `--dry-run`      | 生成せず計画のみ表示                                                          |
+| Option           | Description                                                                 |
+| ---------------- | --------------------------------------------------------------------------- |
+| `-t, --type`     | Format (default: `png`)                                                     |
+| `-s, --size`     | Any size such as `10mb` / `512kb`                                           |
+| `-b, --boundary` | `exact` / `under` (−1 byte) / `over` (+1 byte) (default: `exact`)           |
+| `--bytes`        | Target size in bytes (mutually exclusive with `-s` / `-b`)                  |
+| `-o, --output`   | Output path. Use `-` for stdout                                             |
+| `-f, --force`    | Overwrite existing file                                                     |
+| `--dry-run`      | Print plan without generating                                               |
 
-ヘルプ: `chobitfile --help`
+Help: `chobitfile --help`
