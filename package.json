@@ -38,11 +38,7 @@
     "test:watch": "vitest",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "deploy": "pnpm build && wrangler deploy",
-    "build:wasm": "cd moonbit-bench && moon build --release --target=wasm-gc && cd .. && node scripts/copy-wasm.mjs",
-    "bench": "pnpm build:wasm && node --expose-gc bench/run.mjs",
-    "bench:quick": "pnpm build:wasm && node --expose-gc bench/run.mjs --sizes 1,10 --iters 3",
-    "bench:serve": "pnpm build:wasm && python3 -m http.server 8765 --directory bench"
+    "deploy": "pnpm build && wrangler deploy"
   },
   "devDependencies": {
     "@astryxdesign/cli": "^0.1.6",

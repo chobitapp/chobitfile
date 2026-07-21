@@ -218,7 +218,7 @@ chobitfile-{sizeLabel}mb-{boundary}.{ext}
 ### 7.1 リポジトリ
 
 - ルートをアプリ本体とする（`src/`, `index.html`, `wrangler.jsonc` 等）
-- 既存の `bench/`・`moonbit-bench/`・`docs/` は技術選定の証跡として現状維持
+- `docs/` は技術選定の証跡として維持する
 
 ### 7.2 モジュール指針
 

@@ -6,5 +6,3 @@
 | [CLI 設計検討](./cli-design.md) | Web とロジック共有した CLI の形式・配布・リポジトリ構成の提案 |
 | [技術選定: JS vs MoonBit WASM](./tech-selection-js-vs-moonbit-wasm.md) | 性能ベンチ・可読性/保守性の比較と採用判断 |
 | [サービス構想メモ](./service-concept.md) | プロダクト概要・形式難易度・実行場所の検討 |
-
-再現用ベンチはリポジトリ直下の `bench/` と `moonbit-bench/` を参照。
