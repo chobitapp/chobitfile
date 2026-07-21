@@ -4,6 +4,7 @@ import {
   buildMinimalJpeg,
   findEoiOffset,
   generateJpeg,
+  generateLabeledJpeg,
   hasJpegEoi,
   isJpegSignature,
 } from "./jpeg";
@@ -42,5 +43,21 @@ describe("generateJpeg", () => {
     expect(isJpegSignature(base)).toBe(true);
     expect(hasJpegEoi(base)).toBe(true);
     expect(findEoiOffset(base)).toBe(base.byteLength - 2);
+  });
+});
+
+describe("generateLabeledJpeg", () => {
+  it("Node ではフォールバックしつつ目標サイズを満たす", async () => {
+    // OffscreenCanvas なし → 最小 JPEG ベースでもサイズは合う
+    const target = targetBytesFor(1, "exact");
+    const jpeg = await generateLabeledJpeg(target, {
+      sizeMb: 1,
+      boundary: "exact",
+      targetBytes: target,
+    });
+    expect(jpeg.byteLength).toBe(target);
+    expect(isJpegSignature(jpeg)).toBe(true);
+    expect(hasJpegEoi(jpeg)).toBe(true);
+    expect(findEoiOffset(jpeg)).toBe(target - 2);
   });
 });

@@ -1,12 +1,12 @@
-import { generateFile, type PngLabel } from "../generators";
+import { generateFile, type ImageLabel } from "../generators";
 import { type FileType, MIME_TYPES } from "../lib/types";
 
 export type GenerateRequest = {
   type: FileType;
   targetBytes: number;
   filename: string;
-  /** PNG のときプレビューに描くラベル */
-  pngLabel?: PngLabel;
+  /** PNG / JPEG のときプレビューに描くラベル */
+  imageLabel?: ImageLabel;
 };
 
 export type GenerateResponse =
@@ -27,10 +27,10 @@ const workerScope = self as unknown as {
 };
 
 workerScope.onmessage = (event: MessageEvent<GenerateRequest>) => {
-  const { type, targetBytes, filename, pngLabel } = event.data;
+  const { type, targetBytes, filename, imageLabel } = event.data;
   void (async () => {
     try {
-      const bytes = await generateFile(type, targetBytes, { pngLabel });
+      const bytes = await generateFile(type, targetBytes, { imageLabel });
       if (bytes.byteLength !== targetBytes) {
         throw new Error(
           `生成サイズ不一致: expected ${targetBytes}, got ${bytes.byteLength}`,

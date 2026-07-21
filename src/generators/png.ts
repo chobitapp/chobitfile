@@ -1,28 +1,12 @@
 import { concatBytes, utf8, writeU32BE } from "../lib/bytes";
 import { crc32 } from "../lib/crc32";
-import type { BoundaryMode, SizeMb } from "../lib/types";
+import { type ImageLabel, renderLabeledImage } from "./image-label";
 
 const PNG_SIGNATURE = new Uint8Array([
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
 ]);
 
 const PADDING_CHUNK_TYPE = "chBk";
-
-/** プレビュー用キャンバスサイズ（小さめ固定 → Canvas PNG は数 KB 程度） */
-const LABEL_CANVAS_WIDTH = 640;
-const LABEL_CANVAS_HEIGHT = 360;
-
-export type PngLabel = {
-  sizeMb: SizeMb;
-  boundary: BoundaryMode;
-  targetBytes: number;
-};
-
-const BOUNDARY_LABEL: Record<BoundaryMode, string> = {
-  exact: "ちょうど",
-  under: "−1 バイト",
-  over: "+1 バイト",
-};
 
 function adler32(data: Uint8Array): number {
   let a = 1;
@@ -189,47 +173,9 @@ export function generatePng(
  * OffscreenCanvas でサイズ情報を描画した小さな PNG を返す。
  * Canvas が使えない環境（Node テスト等）では最小 1×1 PNG にフォールバックする。
  */
-export async function renderLabeledPng(label: PngLabel): Promise<Uint8Array> {
-  if (typeof OffscreenCanvas === "undefined") {
-    return buildMinimalPng();
-  }
-
-  const canvas = new OffscreenCanvas(LABEL_CANVAS_WIDTH, LABEL_CANVAS_HEIGHT);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    throw new Error("OffscreenCanvas の 2d コンテキストを取得できません");
-  }
-
-  // 背景
-  ctx.fillStyle = "#0f1419";
-  ctx.fillRect(0, 0, LABEL_CANVAS_WIDTH, LABEL_CANVAS_HEIGHT);
-
-  // 左アクセント
-  ctx.fillStyle = "#3b82f6";
-  ctx.fillRect(0, 0, 10, LABEL_CANVAS_HEIGHT);
-
-  const left = 40;
-  ctx.textBaseline = "top";
-
-  ctx.fillStyle = "#94a3b8";
-  ctx.font = "500 22px ui-sans-serif, system-ui, -apple-system, sans-serif";
-  ctx.fillText("chobitfile", left, 48);
-
-  ctx.fillStyle = "#f1f5f9";
-  ctx.font = "600 64px ui-sans-serif, system-ui, -apple-system, sans-serif";
-  ctx.fillText(`${label.sizeMb} MB`, left, 100);
-
-  ctx.fillStyle = "#cbd5e1";
-  ctx.font = "500 28px ui-sans-serif, system-ui, -apple-system, sans-serif";
-  ctx.fillText(`境界: ${BOUNDARY_LABEL[label.boundary]}`, left, 190);
-
-  ctx.fillStyle = "#94a3b8";
-  ctx.font =
-    "400 24px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
-  ctx.fillText(`${label.targetBytes.toLocaleString("en-US")} bytes`, left, 250);
-
-  const blob = await canvas.convertToBlob({ type: "image/png" });
-  return new Uint8Array(await blob.arrayBuffer());
+export async function renderLabeledPng(label: ImageLabel): Promise<Uint8Array> {
+  const rendered = await renderLabeledImage(label, "image/png");
+  return rendered ?? buildMinimalPng();
 }
 
 /**
@@ -237,7 +183,7 @@ export async function renderLabeledPng(label: PngLabel): Promise<Uint8Array> {
  */
 export async function generateLabeledPng(
   targetBytes: number,
-  label: PngLabel,
+  label: ImageLabel,
 ): Promise<Uint8Array> {
   const base = await renderLabeledPng(label);
   return generatePng(targetBytes, base);

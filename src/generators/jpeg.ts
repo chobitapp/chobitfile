@@ -1,4 +1,5 @@
 import { concatBytes, utf8 } from "../lib/bytes";
+import { type ImageLabel, renderLabeledImage } from "./image-label";
 
 const SOI = new Uint8Array([0xff, 0xd8]);
 const EOI = new Uint8Array([0xff, 0xd9]);
@@ -211,6 +212,28 @@ export function generateJpeg(
     );
   }
   return out;
+}
+
+/**
+ * OffscreenCanvas でサイズ情報を描画した小さな JPEG を返す。
+ * Canvas が使えない環境（Node テスト等）では最小 1×1 JPEG にフォールバックする。
+ */
+export async function renderLabeledJpeg(
+  label: ImageLabel,
+): Promise<Uint8Array> {
+  const rendered = await renderLabeledImage(label, "image/jpeg");
+  return rendered ?? buildMinimalJpeg();
+}
+
+/**
+ * サイズ文字列入りプレビュー JPEG を描画し、目標バイト数までパディングする。
+ */
+export async function generateLabeledJpeg(
+  targetBytes: number,
+  label: ImageLabel,
+): Promise<Uint8Array> {
+  const base = await renderLabeledJpeg(label);
+  return generateJpeg(targetBytes, base);
 }
 
 export function isJpegSignature(data: Uint8Array): boolean {
