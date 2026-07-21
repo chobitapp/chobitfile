@@ -1,0 +1,11 @@
+{
+  "name": "chobitfile",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:wasm": "cd moonbit-bench && moon build --release --target=wasm-gc && cd .. && node scripts/copy-wasm.mjs",
+    "bench": "pnpm build:wasm && node --expose-gc bench/run.mjs",
+    "bench:quick": "pnpm build:wasm && node --expose-gc bench/run.mjs --sizes 1,10 --iters 3",
+    "bench:serve": "pnpm build:wasm && python3 -m http.server 8765 --directory bench"
+  }
+}
