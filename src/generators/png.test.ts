@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { crc32 } from "../lib/crc32";
 import { targetBytesFor } from "../lib/sizes";
-import { generatePng, isPngSignature } from "./png";
+import {
+  buildMinimalPng,
+  findIendOffset,
+  generateLabeledPng,
+  generatePng,
+  isPngSignature,
+} from "./png";
 
 function readChunkAt(data: Uint8Array, offset: number) {
   const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
@@ -15,6 +21,17 @@ function readChunkAt(data: Uint8Array, offset: number) {
   const chunkData = data.subarray(offset + 8, offset + 8 + length);
   const crc = view.getUint32(offset + 8 + length, false);
   return { length, type, chunkData, crc, next: offset + 12 + length };
+}
+
+function listChunkTypes(png: Uint8Array): string[] {
+  const types: string[] = [];
+  let offset = 8;
+  while (offset < png.byteLength) {
+    const chunk = readChunkAt(png, offset);
+    types.push(chunk.type);
+    offset = chunk.next;
+  }
+  return types;
 }
 
 describe("generatePng", () => {
@@ -46,5 +63,35 @@ describe("generatePng", () => {
       expect(chunk.crc).toBe(crc32(crcInput));
       offset = chunk.next;
     }
+  });
+
+  it("任意のベース PNG を IEND 直前でパディングできる", () => {
+    const base = buildMinimalPng();
+    const target = 2048;
+    const png = generatePng(target, base);
+    expect(png.byteLength).toBe(target);
+    expect(listChunkTypes(png)).toEqual(["IHDR", "IDAT", "chBk", "IEND"]);
+    expect(findIendOffset(png)).toBe(target - 12);
+  });
+
+  it("ベース PNG が目標より大きいとエラー", () => {
+    const base = buildMinimalPng();
+    expect(() => generatePng(base.byteLength, base)).toThrow(/より小さい/);
+  });
+});
+
+describe("generateLabeledPng", () => {
+  it("Node ではフォールバックしつつ目標サイズを満たす", async () => {
+    // OffscreenCanvas なし → 最小 PNG ベースでもサイズは合う
+    const target = targetBytesFor(1, "exact");
+    const png = await generateLabeledPng(target, {
+      sizeMb: 1,
+      boundary: "exact",
+      targetBytes: target,
+    });
+    expect(png.byteLength).toBe(target);
+    expect(isPngSignature(png)).toBe(true);
+    expect(listChunkTypes(png).at(-1)).toBe("IEND");
+    expect(listChunkTypes(png)).toContain("chBk");
   });
 });

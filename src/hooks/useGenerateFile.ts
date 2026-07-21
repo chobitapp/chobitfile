@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { pngLabelFromParams } from "../generators";
 import { downloadBlob } from "../lib/download";
 import { buildFilename } from "../lib/filename";
 import { targetBytesFor } from "../lib/sizes";
@@ -40,6 +41,10 @@ export function useGenerateFile() {
         type: params.type,
         targetBytes,
         filename,
+        pngLabel:
+          params.type === "png"
+            ? pngLabelFromParams(params.sizeMb, params.boundary, targetBytes)
+            : undefined,
       };
 
       try {

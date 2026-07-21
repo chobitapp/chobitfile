@@ -1,11 +1,28 @@
 import { concatBytes, utf8, writeU32BE } from "../lib/bytes";
 import { crc32 } from "../lib/crc32";
+import type { BoundaryMode, SizeMb } from "../lib/types";
 
 const PNG_SIGNATURE = new Uint8Array([
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
 ]);
 
 const PADDING_CHUNK_TYPE = "chBk";
+
+/** プレビュー用キャンバスサイズ（小さめ固定 → Canvas PNG は数 KB 程度） */
+const LABEL_CANVAS_WIDTH = 640;
+const LABEL_CANVAS_HEIGHT = 360;
+
+export type PngLabel = {
+  sizeMb: SizeMb;
+  boundary: BoundaryMode;
+  targetBytes: number;
+};
+
+const BOUNDARY_LABEL: Record<BoundaryMode, string> = {
+  exact: "ちょうど",
+  under: "−1 バイト",
+  over: "+1 バイト",
+};
 
 function adler32(data: Uint8Array): number {
   let a = 1;
@@ -53,6 +70,47 @@ function pngChunk(type: string, data: Uint8Array): Uint8Array {
   return out;
 }
 
+function readU32BE(data: Uint8Array, offset: number): number {
+  return (
+    ((data[offset] << 24) |
+      (data[offset + 1] << 16) |
+      (data[offset + 2] << 8) |
+      data[offset + 3]) >>>
+    0
+  );
+}
+
+function chunkTypeAt(data: Uint8Array, offset: number): string {
+  return String.fromCharCode(
+    data[offset + 4],
+    data[offset + 5],
+    data[offset + 6],
+    data[offset + 7],
+  );
+}
+
+/** IEND チャンク先頭オフセット。見つからなければ throw */
+export function findIendOffset(png: Uint8Array): number {
+  if (!isPngSignature(png)) {
+    throw new Error("PNG シグネチャが不正");
+  }
+  let offset = 8;
+  while (offset + 12 <= png.byteLength) {
+    const length = readU32BE(png, offset);
+    if (offset + 12 + length > png.byteLength) {
+      throw new Error("PNG チャンクが途中で切れています");
+    }
+    if (chunkTypeAt(png, offset) === "IEND") {
+      if (length !== 0) {
+        throw new Error("IEND データ長は 0 である必要があります");
+      }
+      return offset;
+    }
+    offset += 12 + length;
+  }
+  throw new Error("IEND チャンクが見つかりません");
+}
+
 /** 1×1 RGB の最小有効 PNG 本体（IEND 直前まで） */
 function buildMinimalPngBody(): Uint8Array {
   const ihdr = new Uint8Array(13);
@@ -78,24 +136,34 @@ function buildMinimalPngBody(): Uint8Array {
 
 const IEND = pngChunk("IEND", new Uint8Array(0));
 
+/** テスト・フォールバック用の最小有効 PNG（IEND 込み） */
+export function buildMinimalPng(): Uint8Array {
+  return concatBytes([buildMinimalPngBody(), IEND]);
+}
+
 /**
- * 目標バイト数ちょうどになる有効 PNG を生成する。
- * 余りは private ancillary チャンク `chBk` で埋める。
+ * 有効なベース PNG を、IEND 直前の private チャンク `chBk` で
+ * 目標バイト数ちょうどに伸ばす。
  */
-export function generatePng(targetBytes: number): Uint8Array {
+export function generatePng(
+  targetBytes: number,
+  basePng?: Uint8Array,
+): Uint8Array {
   if (!Number.isInteger(targetBytes) || targetBytes <= 0) {
     throw new Error(`不正な目標サイズ: ${targetBytes}`);
   }
 
-  const head = buildMinimalPngBody();
-  const fixed = head.byteLength + IEND.byteLength;
+  const base = basePng ?? buildMinimalPng();
+  const iendOffset = findIendOffset(base);
+  const head = base.subarray(0, iendOffset);
   // チャンク: length(4) + type(4) + data + crc(4)
   const chunkOverhead = 12;
-  const paddingDataLen = targetBytes - fixed - chunkOverhead;
+  const paddingDataLen =
+    targetBytes - head.byteLength - chunkOverhead - IEND.byteLength;
 
   if (paddingDataLen < 0) {
     throw new Error(
-      `目標サイズ ${targetBytes} は最小 PNG（${fixed + chunkOverhead}）より小さい`,
+      `目標サイズ ${targetBytes} はベース PNG（${head.byteLength + IEND.byteLength} + パディングオーバーヘッド ${chunkOverhead}）より小さい`,
     );
   }
 
@@ -115,6 +183,64 @@ export function generatePng(targetBytes: number): Uint8Array {
     );
   }
   return out;
+}
+
+/**
+ * OffscreenCanvas でサイズ情報を描画した小さな PNG を返す。
+ * Canvas が使えない環境（Node テスト等）では最小 1×1 PNG にフォールバックする。
+ */
+export async function renderLabeledPng(label: PngLabel): Promise<Uint8Array> {
+  if (typeof OffscreenCanvas === "undefined") {
+    return buildMinimalPng();
+  }
+
+  const canvas = new OffscreenCanvas(LABEL_CANVAS_WIDTH, LABEL_CANVAS_HEIGHT);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("OffscreenCanvas の 2d コンテキストを取得できません");
+  }
+
+  // 背景
+  ctx.fillStyle = "#0f1419";
+  ctx.fillRect(0, 0, LABEL_CANVAS_WIDTH, LABEL_CANVAS_HEIGHT);
+
+  // 左アクセント
+  ctx.fillStyle = "#3b82f6";
+  ctx.fillRect(0, 0, 10, LABEL_CANVAS_HEIGHT);
+
+  const left = 40;
+  ctx.textBaseline = "top";
+
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = "500 22px ui-sans-serif, system-ui, -apple-system, sans-serif";
+  ctx.fillText("chobitfile", left, 48);
+
+  ctx.fillStyle = "#f1f5f9";
+  ctx.font = "600 64px ui-sans-serif, system-ui, -apple-system, sans-serif";
+  ctx.fillText(`${label.sizeMb} MB`, left, 100);
+
+  ctx.fillStyle = "#cbd5e1";
+  ctx.font = "500 28px ui-sans-serif, system-ui, -apple-system, sans-serif";
+  ctx.fillText(`境界: ${BOUNDARY_LABEL[label.boundary]}`, left, 190);
+
+  ctx.fillStyle = "#94a3b8";
+  ctx.font =
+    "400 24px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+  ctx.fillText(`${label.targetBytes.toLocaleString("en-US")} bytes`, left, 250);
+
+  const blob = await canvas.convertToBlob({ type: "image/png" });
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
+/**
+ * サイズ文字列入りプレビュー PNG を描画し、目標バイト数までパディングする。
+ */
+export async function generateLabeledPng(
+  targetBytes: number,
+  label: PngLabel,
+): Promise<Uint8Array> {
+  const base = await renderLabeledPng(label);
+  return generatePng(targetBytes, base);
 }
 
 export function isPngSignature(data: Uint8Array): boolean {
