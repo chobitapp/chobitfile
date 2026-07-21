@@ -5,7 +5,7 @@
 対応形式: PNG / JPEG / DOCX / XLSX / PPTX / PDF / TXT / CSV / JSON
 サイズ上限: 20 MB
 
-- Web: https://chobitfile.nanabit.dev （日本語 / 英語。`?lang=en` で英語）
+- Web: https://chobitfile.nanabit.dev （日本語 / 英語。初期言語はブラウザ設定。`?lang=en` で固定可）
 - CLI: `chobitfile`（メッセージは英語固定）
 
 ## CLI

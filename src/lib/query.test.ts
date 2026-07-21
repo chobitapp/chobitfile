@@ -1,6 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { detectBrowserLocale } from "../i18n/locales";
 import { paramsFromSearch, searchFromParams, toGeneratorParams } from "./query";
-import { DEFAULT_APP_PARAMS, DEFAULT_GENERATOR_PARAMS } from "./types";
+import { DEFAULT_GENERATOR_PARAMS } from "./types";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe("query", () => {
   it("reads a valid query", () => {
@@ -14,18 +19,34 @@ describe("query", () => {
     });
   });
 
-  it("falls back invalid values to defaults", () => {
+  it("falls back invalid values; lang uses browser locale", () => {
+    vi.stubGlobal("navigator", {
+      language: "en-US",
+      languages: ["en-US"],
+    });
     expect(paramsFromSearch("?type=mp4&size=99&boundary=nope&lang=fr")).toEqual(
-      DEFAULT_APP_PARAMS,
+      {
+        ...DEFAULT_GENERATOR_PARAMS,
+        lang: "en",
+      },
     );
   });
 
-  it("reads additional format queries", () => {
+  it("omitted lang follows browser locale", () => {
+    vi.stubGlobal("navigator", {
+      language: "en-GB",
+      languages: ["en-GB"],
+    });
     expect(paramsFromSearch("?type=pdf&size=5&boundary=over")).toEqual({
       type: "pdf",
       sizeMb: 5,
       boundary: "over",
-      lang: "ja",
+      lang: "en",
+    });
+
+    vi.stubGlobal("navigator", {
+      language: "ja-JP",
+      languages: ["ja-JP"],
     });
     expect(paramsFromSearch("?type=json&size=1&boundary=exact")).toEqual({
       type: "json",
@@ -52,5 +73,14 @@ describe("query", () => {
         lang: "en",
       }),
     ).toEqual(DEFAULT_GENERATOR_PARAMS);
+  });
+
+  it("detectBrowserLocale is used when lang is missing", () => {
+    vi.stubGlobal("navigator", {
+      language: "en",
+      languages: ["en"],
+    });
+    expect(paramsFromSearch("").lang).toBe(detectBrowserLocale());
+    expect(paramsFromSearch("").lang).toBe("en");
   });
 });

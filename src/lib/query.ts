@@ -1,6 +1,6 @@
 import { createParser, parseAsStringLiteral, type UrlKeys } from "nuqs";
 import {
-  DEFAULT_LOCALE,
+  detectBrowserLocale,
   isLocale,
   LOCALES,
   type Locale,
@@ -56,9 +56,10 @@ export const generatorSearchParams = {
   boundary: parseAsStringLiteral(BOUNDARY_MODES)
     .withDefault(DEFAULT_GENERATOR_PARAMS.boundary)
     .withOptions({ clearOnDefault: false }),
+  // lang 未指定時はブラウザ設定。default と一致する値は URL から省き、共有時に受信側の設定を活かす
   lang: parseAsStringLiteral(LOCALES)
-    .withDefault(DEFAULT_LOCALE)
-    .withOptions({ clearOnDefault: false }),
+    .withDefault(detectBrowserLocale())
+    .withOptions({ clearOnDefault: true }),
 };
 
 export const generatorUrlKeys = {
@@ -81,7 +82,7 @@ export function paramsFromSearch(search: string): AppParams {
     boundary: isBoundary(boundaryRaw)
       ? boundaryRaw
       : DEFAULT_APP_PARAMS.boundary,
-    lang: isLocale(langRaw) ? langRaw : DEFAULT_APP_PARAMS.lang,
+    lang: isLocale(langRaw) ? langRaw : detectBrowserLocale(),
   };
 }
 

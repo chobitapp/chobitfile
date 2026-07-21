@@ -186,15 +186,15 @@ chobitfile-{sizeLabel}mb-{boundary}.{ext}
 | `type` | `png` / `jpeg` / `docx` / `xlsx` / `pptx` / `pdf` / `txt` / `csv` / `json` |
 | `size` | `1` / `3` / `5` / `10` / `20` |
 | `boundary` | `exact` / `under` / `over` |
-| `lang` | `ja` / `en`（default: `ja`） |
+| `lang` | `ja` / `en`。未指定・不正時はブラウザの `navigator.languages` から判定（`en*` → `en`、`ja*` → `ja`、それ以外 → `ja`） |
 
 例: `/?type=png&size=10&boundary=under&lang=en`
 
-不正・未知の値は無視し、該当項目をデフォルトにフォールバックする。
+不正・未知の値は無視し、該当項目をデフォルトにフォールバックする。`lang` がブラウザ判定結果と一致する場合は URL から省略してよい（共有時に受信側の設定を優先するため）。
 
 ### 6.4 テーマ・言語
 
-- Web: 日本語 / 英語。メッセージ辞書 + React Context。切替は UI と `lang` クエリで双方向同期
+- Web: 日本語 / 英語。メッセージ辞書 + React Context。切替は UI と `lang` クエリで双方向同期。初期表示はブラウザ言語設定に従う
 - CLI: 英語固定（ヘルプ・エラー・進捗）
 - テーマ: ライト固定（OS 追従・トグルなし）
 
@@ -267,3 +267,4 @@ UI の E2E とデプロイ後のブラウザ手動確認は必須にしない（
 | 2026-07-21 | 形式追加: JPEG / XLSX / PPTX / PDF / TXT / CSV / JSON |
 | 2026-07-21 | CLI（npm）を追加。任意サイズは CLI のみ、上限は Web 準拠 |
 | 2026-07-21 | Web 日英 i18n（`lang` クエリ）。CLI は英語固定 |
+| 2026-07-21 | Web の `lang` 未指定時はブラウザ言語設定を参照 |
