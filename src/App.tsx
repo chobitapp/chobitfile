@@ -28,7 +28,7 @@ const FILE_TYPE_OPTIONS = [
   {
     type: "section" as const,
     title: "画像",
-    items: [
+    options: [
       { value: "png", label: FILE_TYPE_LABELS.png },
       { value: "jpeg", label: FILE_TYPE_LABELS.jpeg },
     ],
@@ -36,7 +36,7 @@ const FILE_TYPE_OPTIONS = [
   {
     type: "section" as const,
     title: "ドキュメント",
-    items: [
+    options: [
       { value: "pdf", label: FILE_TYPE_LABELS.pdf },
       { value: "docx", label: FILE_TYPE_LABELS.docx },
       { value: "xlsx", label: FILE_TYPE_LABELS.xlsx },
@@ -46,7 +46,7 @@ const FILE_TYPE_OPTIONS = [
   {
     type: "section" as const,
     title: "テキスト",
-    items: [
+    options: [
       { value: "txt", label: FILE_TYPE_LABELS.txt },
       { value: "csv", label: FILE_TYPE_LABELS.csv },
       { value: "json", label: FILE_TYPE_LABELS.json },
