@@ -1,5 +1,9 @@
 node_modules/
+dist/
+.wrangler/
 bench/last-results.json
 bench/moonbit_bench.wasm
 moonbit-bench/_build/
 .DS_Store
+*.local
+.dev.vars

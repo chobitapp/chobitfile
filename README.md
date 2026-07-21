@@ -1,25 +1,40 @@
 # chobitfile
 
-指定サイズ・形式のダミーファイルをブラウザ側で生成するツール（開発中）。
+指定サイズ・形式のダミーファイルを **ブラウザ側で生成** するツール。
 
-## 技術選定（要約）
+第一弾（MVP）: **PNG / DOCX**、サイズ **1 / 3 / 5 / 10 / 20 MB**（1024 系）、境界 **ちょうど / −1 / +1 バイト**。
 
-**ブラウザ生成の本体は素の JS（必要なら Web Worker）。MoonBit/WASM は MVP の前提にしない。**
+## 使い方
 
-| 観点 | 結果 |
-|---|---|
-| 性能 | ゼロ埋め・CRC32・ZIP・テキストは JS 有利。パターン埋めのみ互角 |
-| シンプルさ / 保守性 | JS が上（ビルド・FFI・境界コストが不要） |
+```bash
+pnpm install
+pnpm dev          # 開発サーバ
+pnpm test         # 生成器の単体テスト
+pnpm build        # dist/ へビルド
+pnpm deploy       # ビルド後、Cloudflare Workers へ手動デプロイ
+```
 
-詳細な計測条件・数値表・不採用理由はドキュメントを参照:
+デプロイ前に `wrangler login` が必要です。
 
-- [docs/ 一覧](./docs/README.md)
+## ドキュメント
+
+- [MVP 仕様](./docs/mvp-spec.md)（スコープ・サイズ・UI・技術の正本）
+- [docs 一覧](./docs/README.md)
 - [技術選定: JS vs MoonBit WASM](./docs/tech-selection-js-vs-moonbit-wasm.md)
 - [サービス構想メモ](./docs/service-concept.md)
 
-## ベンチの再現
+## 技術構成（MVP）
 
-前提: `moon`（MoonBit）、Node.js、pnpm。
+| 項目 | 内容 |
+|---|---|
+| アプリ | Vite + React + TypeScript |
+| UI | AstryX |
+| 生成 | ブラウザ内 JS（Web Worker） |
+| ホスト | Cloudflare Workers Static Assets |
+| Lint | Biome |
+| テスト | Vitest（生成器中心） |
+
+## ベンチ（技術選定の証跡）
 
 ```bash
 pnpm bench          # WASM ビルド + 1/10/100MB フル計測
@@ -28,8 +43,8 @@ pnpm bench:serve    # ブラウザ UI (http://localhost:8765)
 ```
 
 ```
-bench/                 # ベンチランナー（JS 実装・UI・Node CLI）
-moonbit-bench/         # MoonBit wasm-gc ライブラリ
-docs/                  # 検証記録・構想メモ
-scripts/copy-wasm.mjs  # ビルド成果物を bench/ へコピー
+src/                   # アプリ本体
+bench/                 # ベンチランナー
+moonbit-bench/         # MoonBit wasm-gc（選定検証用・MVP では未使用）
+docs/                  # 仕様・検証記録
 ```
