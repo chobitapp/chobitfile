@@ -2,8 +2,10 @@ import { Banner } from "@astryxdesign/core/Banner";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
 import { Center } from "@astryxdesign/core/Center";
+import { CodeBlock } from "@astryxdesign/core/CodeBlock";
 import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { Heading } from "@astryxdesign/core/Heading";
+import { HStack } from "@astryxdesign/core/HStack";
 import { Link } from "@astryxdesign/core/Link";
 import { RadioList, RadioListItem } from "@astryxdesign/core/RadioList";
 import {
@@ -54,6 +56,12 @@ const FILE_TYPE_OPTIONS = [
     ],
   },
 ];
+
+const CLI_GENERATE_EXAMPLE = `# 10MBのPDFファイルを生成
+npx chobitfile -t pdf -s 10mb -o ./10mb.pdf`;
+
+const CLI_INSTALL_EXAMPLE = `# グローバルにインストール
+npm i -g chobitfile`;
 
 export function App() {
   const [params, setParams] = useQueryParams();
@@ -152,10 +160,43 @@ export function App() {
           </VStack>
         </Card>
 
+        <Card maxWidth={480} width="100%" padding={5}>
+          <VStack gap={3}>
+            <VStack gap={1}>
+              <Heading level={2}>CLI でも使えます</Heading>
+              <Text type="supporting" display="block">
+                ターミナルから同じダミーファイルを生成できます。npx
+                でその場実行するか、グローバルにインストールしてください。
+              </Text>
+            </VStack>
+            <CodeBlock
+              code={CLI_GENERATE_EXAMPLE}
+              language="bash"
+              hasCopyButton
+              width="100%"
+            />
+            <CodeBlock
+              code={CLI_INSTALL_EXAMPLE}
+              language="bash"
+              hasCopyButton
+              width="100%"
+            />
+          </VStack>
+        </Card>
+
         <Center axis="horizontal">
-          <Link href="https://nanabit.dev/" isExternalLink isStandalone>
-            nanabit
-          </Link>
+          <HStack gap={3} vAlign="center">
+            <Link
+              href="https://github.com/zaru/chobitfile"
+              isExternalLink
+              isStandalone
+            >
+              GitHub
+            </Link>
+            <Link href="https://nanabit.dev/" isExternalLink isStandalone>
+              nanabit
+            </Link>
+          </HStack>
         </Center>
       </VStack>
     </Center>
