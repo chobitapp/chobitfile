@@ -1,13 +1,8 @@
-import { generateFile, type ImageLabel } from "../generators";
-import { type FileType, MIME_TYPES } from "../lib/types";
+import { generateFile } from "../generators";
+import { MIME_TYPES } from "../lib/types";
+import { type GenerateRequest, parseGenerateRequest } from "./validate-request";
 
-export type GenerateRequest = {
-  type: FileType;
-  targetBytes: number;
-  filename: string;
-  /** PNG / JPEG のときプレビューに描くラベル */
-  imageLabel?: ImageLabel;
-};
+export type { GenerateRequest };
 
 export type GenerateResponse =
   | {
@@ -23,13 +18,15 @@ export type GenerateResponse =
 
 const workerScope = self as unknown as {
   postMessage: (message: GenerateResponse, transfer?: Transferable[]) => void;
-  onmessage: ((event: MessageEvent<GenerateRequest>) => void) | null;
+  onmessage: ((event: MessageEvent<unknown>) => void) | null;
 };
 
-workerScope.onmessage = (event: MessageEvent<GenerateRequest>) => {
-  const { type, targetBytes, filename, imageLabel } = event.data;
+workerScope.onmessage = (event: MessageEvent<unknown>) => {
   void (async () => {
     try {
+      const { type, targetBytes, filename, imageLabel } = parseGenerateRequest(
+        event.data,
+      );
       const bytes = await generateFile(type, targetBytes, { imageLabel });
       if (bytes.byteLength !== targetBytes) {
         throw new Error(

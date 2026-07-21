@@ -1,3 +1,4 @@
+import { createParser, parseAsStringLiteral, type UrlKeys } from "nuqs";
 import {
   BOUNDARY_MODES,
   type BoundaryMode,
@@ -20,6 +21,38 @@ function isSizeMb(value: number): value is SizeMb {
 function isBoundary(value: string): value is BoundaryMode {
   return (BOUNDARY_MODES as readonly string[]).includes(value);
 }
+
+/** size クエリ（1 / 3 / 5 / 10 / 20）を SizeMb に変換する */
+const parseAsSizeMb = createParser({
+  parse(value) {
+    const n = Number(value);
+    if (!Number.isInteger(n) || !isSizeMb(n)) return null;
+    return n;
+  },
+  serialize(value) {
+    return String(value);
+  },
+});
+
+/**
+ * nuqs 用のパーサ定義。
+ * URL キー `size` は GeneratorParams の `sizeMb` にマップする。
+ */
+export const generatorSearchParams = {
+  type: parseAsStringLiteral(FILE_TYPES)
+    .withDefault(DEFAULT_PARAMS.type)
+    .withOptions({ clearOnDefault: false }),
+  sizeMb: parseAsSizeMb
+    .withDefault(DEFAULT_PARAMS.sizeMb)
+    .withOptions({ clearOnDefault: false }),
+  boundary: parseAsStringLiteral(BOUNDARY_MODES)
+    .withDefault(DEFAULT_PARAMS.boundary)
+    .withOptions({ clearOnDefault: false }),
+};
+
+export const generatorUrlKeys = {
+  sizeMb: "size",
+} as const satisfies UrlKeys<typeof generatorSearchParams>;
 
 /** URL クエリから設定を読む。不正値はデフォルトにフォールバック */
 export function paramsFromSearch(search: string): GeneratorParams {

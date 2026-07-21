@@ -14,6 +14,9 @@ importers:
       '@astryxdesign/theme-neutral':
         specifier: ^0.1.6
         version: 0.1.6(@astryxdesign/core@0.1.6(@stylexjs/stylex@0.19.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
+      nuqs:
+        specifier: ^2.9.1
+        version: 2.9.1(react@19.2.7)
       react:
         specifier: ^19.2.7
         version: 19.2.7
@@ -1336,6 +1339,27 @@ packages:
   node-releases@2.0.51:
     resolution: {integrity: sha512-wRNIrw4DmVLKQlbgOMdkMx27Wrpzes2hh5Jtbi2bjPd+4wJstWIqP5A+lscnqbm0xxmT5Bpg8Lec5ItEBwx6BQ==}
     engines: {node: '>=18'}
+
+  nuqs@2.9.1:
+    resolution: {integrity: sha512-xctOTExJ/M2lV9NBXTkLMb3vnGBLk/eMuZyiXSbj0jA24H6ie2d7/LJiaA0C30p5XCIWaDTZl5DEF/N2Yo1LCw==}
+    peerDependencies:
+      '@remix-run/react': '>=2'
+      '@tanstack/react-router': ^1
+      next: '>=14.2.0'
+      react: '>=18.2.0 || ^19.0.0-0'
+      react-router: ^5 || ^6 || ^7 || ^8
+      react-router-dom: ^5 || ^6 || ^7
+    peerDependenciesMeta:
+      '@remix-run/react':
+        optional: true
+      '@tanstack/react-router':
+        optional: true
+      next:
+        optional: true
+      react-router:
+        optional: true
+      react-router-dom:
+        optional: true
 
   obug@2.1.4:
     resolution: {integrity: sha512-4a+OsYv9UktOJKE+l1A4OufDgdRF9PifWj+tJnHURo/P+WOxpG4GzUFL9qCalmWauao6ogiG+QvnCovwPoyAWA==}
@@ -2686,6 +2710,11 @@ snapshots:
   neo-async@2.6.2: {}
 
   node-releases@2.0.51: {}
+
+  nuqs@2.9.1(react@19.2.7):
+    dependencies:
+      '@standard-schema/spec': 1.1.0
+      react: 19.2.7
 
   obug@2.1.4: {}
 

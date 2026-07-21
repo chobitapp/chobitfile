@@ -198,6 +198,8 @@ chobitfile-{sizeLabel}mb-{boundary}.{ext}
 | 単体テスト | Vitest（生成器中心） |
 | ホスト | Cloudflare Workers + Static Assets |
 | デプロイ | `wrangler` 手動（`pnpm deploy` 等） |
+| URL 状態 | nuqs（`useQueryStates` + React SPA アダプタ） |
+| セキュリティヘッダ | `public/_headers`（CSP / nosniff / frame 拒否 等） |
 | 計測 | なし |
 
 ### 7.1 リポジトリ

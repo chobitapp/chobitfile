@@ -1,5 +1,6 @@
 import { Theme } from "@astryxdesign/core/theme";
 import { neutralTheme } from "@astryxdesign/theme-neutral/built";
+import { NuqsAdapter } from "nuqs/adapters/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
@@ -16,8 +17,10 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <Theme theme={neutralTheme} mode="light">
-      <App />
-    </Theme>
+    <NuqsAdapter>
+      <Theme theme={neutralTheme} mode="light">
+        <App />
+      </Theme>
+    </NuqsAdapter>
   </StrictMode>,
 );
