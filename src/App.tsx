@@ -164,10 +164,6 @@ export function App() {
           <VStack gap={3}>
             <VStack gap={1}>
               <Heading level={2}>CLI でも使えます</Heading>
-              <Text type="supporting" display="block">
-                ターミナルから同じダミーファイルを生成できます。npx
-                でその場実行するか、グローバルにインストールしてください。
-              </Text>
             </VStack>
             <CodeBlock
               code={CLI_GENERATE_EXAMPLE}
