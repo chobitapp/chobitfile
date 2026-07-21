@@ -3,6 +3,7 @@
 | 文書 | 内容 |
 |---|---|
 | [MVP 仕様](./mvp-spec.md) | 第一弾のスコープ・サイズ/境界・形式・UI・技術構成の正本 |
+| [CLI 設計検討](./cli-design.md) | Web とロジック共有した CLI の形式・配布・リポジトリ構成の提案 |
 | [技術選定: JS vs MoonBit WASM](./tech-selection-js-vs-moonbit-wasm.md) | 性能ベンチ・可読性/保守性の比較と採用判断 |
 | [サービス構想メモ](./service-concept.md) | プロダクト概要・形式難易度・実行場所の検討 |
 

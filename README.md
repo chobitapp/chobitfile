@@ -19,6 +19,7 @@ pnpm deploy       # ビルド後、Cloudflare Workers へ手動デプロイ
 ## ドキュメント
 
 - [MVP 仕様](./docs/mvp-spec.md)（スコープ・サイズ・UI・技術の正本）
+- [CLI 設計検討](./docs/cli-design.md)（Web 共有コア・CLI UX・配布案）
 - [docs 一覧](./docs/README.md)
 - [技術選定: JS vs MoonBit WASM](./docs/tech-selection-js-vs-moonbit-wasm.md)
 - [サービス構想メモ](./docs/service-concept.md)
