@@ -4,6 +4,7 @@ import { Card } from "@astryxdesign/core/Card";
 import { Center } from "@astryxdesign/core/Center";
 import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { Heading } from "@astryxdesign/core/Heading";
+import { Link } from "@astryxdesign/core/Link";
 import { RadioList, RadioListItem } from "@astryxdesign/core/RadioList";
 import {
   SegmentedControl,
@@ -68,9 +69,6 @@ export function App() {
           <VStack gap={4}>
             <VStack gap={1}>
               <Heading level={1}>chobitfile</Heading>
-              <Text type="supporting" display="block">
-                ファイルはブラウザ内で生成されます。サーバーには送信しません。
-              </Text>
             </VStack>
 
             <FormLayout direction="vertical">
@@ -153,6 +151,12 @@ export function App() {
             />
           </VStack>
         </Card>
+
+        <Center axis="horizontal">
+          <Link href="https://nanabit.dev/" isExternalLink isStandalone>
+            nanabit
+          </Link>
+        </Center>
       </VStack>
     </Center>
   );
