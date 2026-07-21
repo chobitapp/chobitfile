@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>chobitfile サイズ確認（単体）</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #0f1419;
+        --panel: #1a2332;
+        --border: #2d3a4d;
+        --text: #e7ecf3;
+        --muted: #94a3b8;
+        --accent: #3b82f6;
+        --ok: #22c55e;
+        --ng: #ef4444;
+        --warn: #f59e0b;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+      }
+
+      main {
+        max-width: 40rem;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 3rem;
+      }
+
+      h1 {
+        font-size: 1.35rem;
+        font-weight: 650;
+        margin: 0 0 0.35rem;
+      }
+
+      .lead {
+        color: var(--muted);
+        font-size: 0.95rem;
+        margin: 0 0 1.5rem;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+      }
+
+      fieldset {
+        border: 0;
+        margin: 0 0 1.1rem;
+        padding: 0;
+      }
+
+      legend {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.02em;
+      }
+
+      .choices {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .choices label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.92rem;
+        user-select: none;
+      }
+
+      .choices label:has(input:checked) {
+        border-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 18%, transparent);
+      }
+
+      .choices input {
+        accent-color: var(--accent);
+      }
+
+      .file-row {
+        display: grid;
+        gap: 0.65rem;
+      }
+
+      input[type="file"] {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--bg) 55%, transparent);
+        color: var(--text);
+        cursor: pointer;
+      }
+
+      .hint {
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+
+      code {
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.88em;
+      }
+
+      .meta {
+        display: grid;
+        gap: 0.35rem;
+        font-size: 0.92rem;
+      }
+
+      .meta dt {
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .meta dd {
+        margin: 0 0 0.55rem;
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        word-break: break-all;
+      }
+
+      .result {
+        border-radius: 10px;
+        padding: 0.9rem 1rem;
+        font-weight: 600;
+        border: 1px solid var(--border);
+      }
+
+      .result.ok {
+        color: var(--ok);
+        border-color: color-mix(in srgb, var(--ok) 45%, var(--border));
+        background: color-mix(in srgb, var(--ok) 12%, transparent);
+      }
+
+      .result.ng {
+        color: var(--ng);
+        border-color: color-mix(in srgb, var(--ng) 45%, var(--border));
+        background: color-mix(in srgb, var(--ng) 12%, transparent);
+      }
+
+      .result.idle {
+        color: var(--muted);
+        font-weight: 500;
+      }
+
+      .diff {
+        margin-top: 0.35rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      footer {
+        margin-top: 1.25rem;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>ファイルサイズ確認</h1>
+      <p class="lead">
+        chobitfile で生成したファイルを選び、目標バイト数と一致するかクライアント側だけで確認します（アップロード先サーバーはありません）。
+      </p>
+
+      <form class="panel" id="form" onsubmit="return false;">
+        <fieldset>
+          <legend>サイズ（MB）</legend>
+          <div class="choices" id="sizeChoices" role="radiogroup" aria-label="サイズ"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>境界</legend>
+          <div class="choices" role="radiogroup" aria-label="境界">
+            <label>
+              <input type="radio" name="boundary" value="exact" checked />
+              ちょうど
+            </label>
+            <label>
+              <input type="radio" name="boundary" value="under" />
+              −1 バイト
+            </label>
+            <label>
+              <input type="radio" name="boundary" value="over" />
+              +1 バイト
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="file-row">
+          <label class="hint" for="file">
+            ファイル選択
+            （<code>input[type=file]</code> の
+            <code>size</code> 属性に目標バイト数を反映）
+          </label>
+          <!-- size は本来テキスト欄の幅指定属性だが、目標サイズを明示するため目標バイト数を入れる -->
+          <input
+            id="file"
+            name="file"
+            type="file"
+            size="1048576"
+            data-target-bytes="1048576"
+          />
+          <p class="hint">
+            目標:
+            <strong id="targetLabel">1 MB / ちょうど / 1,048,576 bytes</strong>
+          </p>
+        </div>
+      </form>
+
+      <section class="panel" aria-live="polite">
+        <div id="result" class="result idle">ファイルを選択してください</div>
+        <dl class="meta" id="meta" hidden>
+          <dt>ファイル名</dt>
+          <dd id="metaName">—</dd>
+          <dt>実バイト数（File.size）</dt>
+          <dd id="metaActual">—</dd>
+          <dt>目標バイト数</dt>
+          <dd id="metaTarget">—</dd>
+          <dt>input の size 属性</dt>
+          <dd id="metaAttr">—</dd>
+          <dt>MIME type</dt>
+          <dd id="metaType">—</dd>
+        </dl>
+      </section>
+
+      <footer>
+        アプリ本体には組み込んでいません。
+        <code>file://</code> またはローカルサーバーでこの HTML
+        を直接開いて使えます。サイズ定義は chobitfile と同じ 1024 系（1 MB =
+        1,048,576 bytes）です。
+      </footer>
+    </main>
+
+    <script>
+      const MIB = 1024 * 1024;
+      const SIZE_MB_OPTIONS = [1, 3, 5, 10, 20];
+
+      const BOUNDARY_LABEL = {
+        exact: "ちょうど",
+        under: "−1 バイト",
+        over: "+1 バイト",
+      };
+
+      /** @param {number} sizeMb @param {"exact"|"under"|"over"} boundary */
+      function targetBytesFor(sizeMb, boundary) {
+        const base = sizeMb * MIB;
+        if (boundary === "under") return base - 1;
+        if (boundary === "over") return base + 1;
+        return base;
+      }
+
+      function formatBytes(n) {
+        return n.toLocaleString("en-US");
+      }
+
+      const sizeChoices = document.getElementById("sizeChoices");
+      const fileInput = document.getElementById("file");
+      const targetLabel = document.getElementById("targetLabel");
+      const resultEl = document.getElementById("result");
+      const metaEl = document.getElementById("meta");
+
+      for (const mb of SIZE_MB_OPTIONS) {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = "sizeMb";
+        input.value = String(mb);
+        if (mb === 1) input.checked = true;
+        label.append(input, document.createTextNode(` ${mb} MB`));
+        sizeChoices.append(label);
+      }
+
+      function selectedSizeMb() {
+        const el = document.querySelector('input[name="sizeMb"]:checked');
+        return Number(el?.value ?? 1);
+      }
+
+      function selectedBoundary() {
+        const el = document.querySelector('input[name="boundary"]:checked');
+        return /** @type {"exact"|"under"|"over"} */ (el?.value ?? "exact");
+      }
+
+      /** 目標バイト数を UI と input の size 属性へ反映 */
+      function syncTarget() {
+        const sizeMb = selectedSizeMb();
+        const boundary = selectedBoundary();
+        const target = targetBytesFor(sizeMb, boundary);
+
+        // HTML の size 属性は本来表示幅用だが、要求どおり目標バイト数を入れる
+        fileInput.setAttribute("size", String(target));
+        fileInput.dataset.targetBytes = String(target);
+
+        targetLabel.textContent = `${sizeMb} MB / ${BOUNDARY_LABEL[boundary]} / ${formatBytes(target)} bytes`;
+        document.getElementById("metaTarget").textContent =
+          `${formatBytes(target)} bytes`;
+        document.getElementById("metaAttr").textContent =
+          fileInput.getAttribute("size") ?? "—";
+
+        // 選択中ファイルがあれば再判定
+        if (fileInput.files?.[0]) {
+          checkFile(fileInput.files[0]);
+        }
+      }
+
+      /**
+       * クライアント側のサイズチェック（File.size と目標の完全一致）
+       * @param {File} file
+       */
+      function checkFile(file) {
+        const sizeMb = selectedSizeMb();
+        const boundary = selectedBoundary();
+        const target = targetBytesFor(sizeMb, boundary);
+        const actual = file.size;
+        const ok = actual === target;
+        const diff = actual - target;
+
+        metaEl.hidden = false;
+        document.getElementById("metaName").textContent = file.name;
+        document.getElementById("metaActual").textContent =
+          `${formatBytes(actual)} bytes`;
+        document.getElementById("metaTarget").textContent =
+          `${formatBytes(target)} bytes`;
+        document.getElementById("metaAttr").textContent =
+          fileInput.getAttribute("size") ?? "—";
+        document.getElementById("metaType").textContent =
+          file.type || "(empty)";
+
+        resultEl.classList.remove("idle", "ok", "ng");
+        if (ok) {
+          resultEl.classList.add("ok");
+          resultEl.innerHTML = `一致: ${formatBytes(actual)} bytes（${sizeMb} MB / ${BOUNDARY_LABEL[boundary]}）`;
+        } else {
+          resultEl.classList.add("ng");
+          const sign = diff > 0 ? "+" : "";
+          resultEl.innerHTML =
+            `不一致` +
+            `<div class="diff">actual ${formatBytes(actual)} / target ${formatBytes(target)}（diff ${sign}${formatBytes(diff)}）</div>`;
+        }
+      }
+
+      document.getElementById("form").addEventListener("change", (event) => {
+        const t = /** @type {HTMLElement} */ (event.target);
+        if (t instanceof HTMLInputElement && t.name === "file") {
+          const file = t.files?.[0];
+          if (!file) {
+            resultEl.className = "result idle";
+            resultEl.textContent = "ファイルを選択してください";
+            metaEl.hidden = true;
+            return;
+          }
+          checkFile(file);
+          return;
+        }
+        syncTarget();
+      });
+
+      // 初期反映
+      syncTarget();
+    </script>
+  </body>
+</html>
