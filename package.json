@@ -1,7 +1,7 @@
 {
   "name": "chobitfile",
-  "version": "0.1.1",
-  "description": "指定サイズ・形式のダミーファイルをローカル生成する CLI / Web ツール",
+  "version": "0.1.2",
+  "description": "Generate dummy files of a given size and format.",
   "type": "module",
   "bin": {
     "chobitfile": "./dist-cli/index.js"
