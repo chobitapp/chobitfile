@@ -20,7 +20,7 @@ export type CliArgs = {
   dryRun: boolean;
   quiet: boolean;
   help: boolean;
-  /** デフォルトファイル名生成用 */
+  /** For default filename generation */
   sizeMbLabel: number | null;
   fromBytesFlag: boolean;
 };
@@ -37,40 +37,39 @@ function isBoundary(value: string): value is BoundaryMode {
   return (BOUNDARY_MODES as readonly string[]).includes(value);
 }
 
-export const CLI_HELP = `chobitfile — 指定サイズ・形式のダミーファイルをローカル生成
+export const CLI_HELP = `chobitfile — generate dummy files of a given size and format locally
 
-使い方:
+Usage:
   chobitfile generate [options]
   chobitfile [options]
 
 Options:
-  -t, --type <type>         形式: ${FILE_TYPES.join(" | ")}
+  -t, --type <type>         Format: ${FILE_TYPES.join(" | ")}
                             (default: ${DEFAULT_PARAMS.type})
-  -s, --size <size>         サイズ（1024 系）: 10mb / 512kb / 1048576
-                            任意サイズ可。上限 ${MAX_TARGET_BYTES.toLocaleString("en-US")} bytes（Web と同じ）
+  -s, --size <size>         Size (1024-based): 10mb / 512kb / 1048576
+                            Any size allowed. Max ${MAX_TARGET_BYTES.toLocaleString("en-US")} bytes (same as Web)
                             (default: ${DEFAULT_PARAMS.sizeMb}mb)
-      --bytes <n>           目標バイト数を直接指定（--size / --boundary と併用不可）
-  -b, --boundary <mode>     exact | under | over（--size 時のみ）
+      --bytes <n>           Target byte size directly (cannot combine with --size / --boundary)
+  -b, --boundary <mode>     exact | under | over (with --size only)
                             (default: ${DEFAULT_PARAMS.boundary})
-  -o, --output <path>       出力パス。- で stdout
-                            (default: カレントのデフォルトファイル名)
-  -f, --force               既存ファイルを上書き
-      --dry-run             生成せず、計画だけ表示
-  -q, --quiet               進捗メッセージを出さない
-  -h, --help                ヘルプ
+  -o, --output <path>       Output path. Use - for stdout
+                            (default: default filename in cwd)
+  -f, --force               Overwrite existing file
+      --dry-run             Print plan without generating
+  -q, --quiet               Suppress progress messages
+  -h, --help                Show help
 
-例:
+Examples:
   chobitfile generate -t png -s 10mb -b exact
   chobitfile generate -t pdf --bytes 1234567 -o ./out.pdf
   chobitfile generate -t json -s 1mb -o -
 `;
 
 /**
- * process.argv 相当（node / スクリプト以降）から CLI 引数を解釈する。
- * `generate` サブコマンドは省略可能。
+ * Parse argv after node/script.
+ * The `generate` subcommand is optional.
  */
 export function parseCliArgs(argv: string[]): CliArgs {
-  // generate を先頭から剥がす（あってもなくてもよい）
   const tokens = [...argv];
   if (tokens[0] === "generate") {
     tokens.shift();
@@ -101,7 +100,7 @@ export function parseCliArgs(argv: string[]): CliArgs {
 
   if (parsed.positionals.length > 0) {
     throw new CliUsageError(
-      `不明な引数: ${parsed.positionals.join(" ")}。chobitfile --help を参照してください`,
+      `Unknown argument(s): ${parsed.positionals.join(" ")}. See chobitfile --help`,
     );
   }
 
@@ -124,7 +123,7 @@ export function parseCliArgs(argv: string[]): CliArgs {
   const typeRaw = values.type ?? DEFAULT_PARAMS.type;
   if (!isFileType(typeRaw)) {
     throw new CliUsageError(
-      `不正な形式: ${typeRaw}（${FILE_TYPES.join(", ")}）`,
+      `Invalid type: ${typeRaw} (expected ${FILE_TYPES.join(", ")})`,
     );
   }
 
@@ -134,14 +133,14 @@ export function parseCliArgs(argv: string[]): CliArgs {
 
   if (hasBytes && (hasSize || hasBoundaryFlag)) {
     throw new CliUsageError(
-      "--bytes は --size / --boundary と同時に指定できません",
+      "--bytes cannot be combined with --size / --boundary",
     );
   }
 
   const boundaryRaw = values.boundary ?? DEFAULT_PARAMS.boundary;
   if (!isBoundary(boundaryRaw)) {
     throw new CliUsageError(
-      `不正な境界: ${boundaryRaw}（${BOUNDARY_MODES.join(", ")}）`,
+      `Invalid boundary: ${boundaryRaw} (expected ${BOUNDARY_MODES.join(", ")})`,
     );
   }
 
@@ -153,7 +152,7 @@ export function parseCliArgs(argv: string[]): CliArgs {
     fromBytesFlag = true;
     const n = Number(values.bytes);
     if (!Number.isInteger(n) || n <= 0) {
-      throw new CliUsageError(`不正な --bytes: ${values.bytes}`);
+      throw new CliUsageError(`Invalid --bytes: ${values.bytes}`);
     }
     targetBytes = n;
   } else {
@@ -168,7 +167,7 @@ export function parseCliArgs(argv: string[]): CliArgs {
     }
     sizeMbLabel = tryParseWholeMibLabel(sizeRaw);
 
-    // Web プリセット SizeMb は共通関数で境界適用（経路を揃える）
+    // Align Web presets with shared boundary helper
     if (
       sizeMbLabel !== null &&
       (SIZE_MB_OPTIONS as readonly number[]).includes(sizeMbLabel)
@@ -190,11 +189,11 @@ export function parseCliArgs(argv: string[]): CliArgs {
   }
 
   if (targetBytes <= 0 || !Number.isInteger(targetBytes)) {
-    throw new CliUsageError(`目標バイト数が不正です: ${targetBytes}`);
+    throw new CliUsageError(`Invalid target bytes: ${targetBytes}`);
   }
   if (targetBytes > MAX_TARGET_BYTES) {
     throw new CliUsageError(
-      `目標サイズが上限を超えています: ${targetBytes}（最大 ${MAX_TARGET_BYTES}。Web と同じ）`,
+      `Target size exceeds limit: ${targetBytes} (max ${MAX_TARGET_BYTES}, same as Web)`,
     );
   }
 

@@ -1,8 +1,16 @@
 import { createParser, parseAsStringLiteral, type UrlKeys } from "nuqs";
 import {
+  DEFAULT_LOCALE,
+  isLocale,
+  LOCALES,
+  type Locale,
+} from "../i18n/locales";
+import {
+  type AppParams,
   BOUNDARY_MODES,
   type BoundaryMode,
-  DEFAULT_PARAMS,
+  DEFAULT_APP_PARAMS,
+  DEFAULT_GENERATOR_PARAMS,
   FILE_TYPES,
   type FileType,
   type GeneratorParams,
@@ -36,17 +44,20 @@ const parseAsSizeMb = createParser({
 
 /**
  * nuqs 用のパーサ定義。
- * URL キー `size` は GeneratorParams の `sizeMb` にマップする。
+ * URL キー `size` は AppParams の `sizeMb` に、`lang` はそのままマップする。
  */
 export const generatorSearchParams = {
   type: parseAsStringLiteral(FILE_TYPES)
-    .withDefault(DEFAULT_PARAMS.type)
+    .withDefault(DEFAULT_GENERATOR_PARAMS.type)
     .withOptions({ clearOnDefault: false }),
   sizeMb: parseAsSizeMb
-    .withDefault(DEFAULT_PARAMS.sizeMb)
+    .withDefault(DEFAULT_GENERATOR_PARAMS.sizeMb)
     .withOptions({ clearOnDefault: false }),
   boundary: parseAsStringLiteral(BOUNDARY_MODES)
-    .withDefault(DEFAULT_PARAMS.boundary)
+    .withDefault(DEFAULT_GENERATOR_PARAMS.boundary)
+    .withOptions({ clearOnDefault: false }),
+  lang: parseAsStringLiteral(LOCALES)
+    .withDefault(DEFAULT_LOCALE)
     .withOptions({ clearOnDefault: false }),
 };
 
@@ -55,26 +66,42 @@ export const generatorUrlKeys = {
 } as const satisfies UrlKeys<typeof generatorSearchParams>;
 
 /** URL クエリから設定を読む。不正値はデフォルトにフォールバック */
-export function paramsFromSearch(search: string): GeneratorParams {
+export function paramsFromSearch(search: string): AppParams {
   const q = new URLSearchParams(
     search.startsWith("?") ? search.slice(1) : search,
   );
   const typeRaw = q.get("type") ?? "";
   const sizeRaw = Number(q.get("size"));
   const boundaryRaw = q.get("boundary") ?? "";
+  const langRaw = q.get("lang") ?? "";
 
   return {
-    type: isFileType(typeRaw) ? typeRaw : DEFAULT_PARAMS.type,
-    sizeMb: isSizeMb(sizeRaw) ? sizeRaw : DEFAULT_PARAMS.sizeMb,
-    boundary: isBoundary(boundaryRaw) ? boundaryRaw : DEFAULT_PARAMS.boundary,
+    type: isFileType(typeRaw) ? typeRaw : DEFAULT_APP_PARAMS.type,
+    sizeMb: isSizeMb(sizeRaw) ? sizeRaw : DEFAULT_APP_PARAMS.sizeMb,
+    boundary: isBoundary(boundaryRaw)
+      ? boundaryRaw
+      : DEFAULT_APP_PARAMS.boundary,
+    lang: isLocale(langRaw) ? langRaw : DEFAULT_APP_PARAMS.lang,
   };
 }
 
-export function searchFromParams(params: GeneratorParams): string {
+export function searchFromParams(params: AppParams): string {
   const q = new URLSearchParams({
     type: params.type,
     size: String(params.sizeMb),
     boundary: params.boundary,
+    lang: params.lang,
   });
   return `?${q.toString()}`;
 }
+
+/** 生成 API に渡す部分だけ取り出す */
+export function toGeneratorParams(params: AppParams): GeneratorParams {
+  return {
+    type: params.type,
+    sizeMb: params.sizeMb,
+    boundary: params.boundary,
+  };
+}
+
+export type { AppParams, Locale };

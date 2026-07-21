@@ -1,3 +1,4 @@
+import type { Locale } from "../i18n/locales";
 import type { BoundaryMode, SizeMb } from "../lib/types";
 
 /** プレビュー用キャンバスサイズ（小さめ固定 → 出力は数〜数十 KB 程度） */
@@ -8,20 +9,35 @@ export type ImageLabel = {
   sizeMb: SizeMb;
   boundary: BoundaryMode;
   targetBytes: number;
+  /** プレビュー文言の言語。省略時は ja */
+  locale?: Locale;
 };
 
-const BOUNDARY_LABEL: Record<BoundaryMode, string> = {
-  exact: "ちょうど",
-  under: "−1 バイト",
-  over: "+1 バイト",
+const BOUNDARY_LABEL: Record<Locale, Record<BoundaryMode, string>> = {
+  ja: {
+    exact: "ちょうど",
+    under: "−1 バイト",
+    over: "+1 バイト",
+  },
+  en: {
+    exact: "Exact",
+    under: "−1 byte",
+    over: "+1 byte",
+  },
+};
+
+const BOUNDARY_PREFIX: Record<Locale, string> = {
+  ja: "境界",
+  en: "Boundary",
 };
 
 export function imageLabelFromParams(
   sizeMb: SizeMb,
   boundary: BoundaryMode,
   targetBytes: number,
+  locale: Locale = "ja",
 ): ImageLabel {
-  return { sizeMb, boundary, targetBytes };
+  return { sizeMb, boundary, targetBytes, locale };
 }
 
 /**
@@ -40,7 +56,7 @@ export async function renderLabeledImage(
   const canvas = new OffscreenCanvas(LABEL_CANVAS_WIDTH, LABEL_CANVAS_HEIGHT);
   const ctx = canvas.getContext("2d");
   if (!ctx) {
-    throw new Error("OffscreenCanvas の 2d コンテキストを取得できません");
+    throw new Error("Failed to get OffscreenCanvas 2d context");
   }
 
   // 背景
@@ -51,6 +67,7 @@ export async function renderLabeledImage(
   ctx.fillStyle = "#3b82f6";
   ctx.fillRect(0, 0, 10, LABEL_CANVAS_HEIGHT);
 
+  const locale = label.locale ?? "ja";
   const left = 40;
   ctx.textBaseline = "top";
 
@@ -64,7 +81,8 @@ export async function renderLabeledImage(
 
   ctx.fillStyle = "#cbd5e1";
   ctx.font = "500 28px ui-sans-serif, system-ui, -apple-system, sans-serif";
-  ctx.fillText(`境界: ${BOUNDARY_LABEL[label.boundary]}`, left, 190);
+  const boundaryText = `${BOUNDARY_PREFIX[locale]}: ${BOUNDARY_LABEL[locale][label.boundary]}`;
+  ctx.fillText(boundaryText, left, 190);
 
   ctx.fillStyle = "#94a3b8";
   ctx.font =

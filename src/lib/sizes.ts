@@ -23,10 +23,12 @@ export function targetBytesFor(sizeMb: SizeMb, boundary: BoundaryMode): number {
   }
 }
 
+/** @deprecated ロケール対応は `src/i18n/format` を使う */
 export function formatBytes(bytes: number): string {
   return bytes.toLocaleString("ja-JP");
 }
 
+/** @deprecated ロケール対応は `src/i18n/format` を使う */
 export function sizeOptionLabel(sizeMb: SizeMb): string {
   return `${sizeMb} MB（${formatBytes(baseBytesForMb(sizeMb))} バイト）`;
 }

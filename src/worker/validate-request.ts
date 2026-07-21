@@ -1,4 +1,5 @@
 import type { ImageLabel } from "../generators";
+import { isLocale, type Locale } from "../i18n/locales";
 import { isValidFilename } from "../lib/filename";
 import { MAX_TARGET_BYTES } from "../lib/sizes";
 import {
@@ -14,7 +15,7 @@ export type GenerateRequest = {
   type: FileType;
   targetBytes: number;
   filename: string;
-  /** PNG / JPEG のときプレビューに描くラベル */
+  /** Label drawn into PNG / JPEG previews */
   imageLabel?: ImageLabel;
 };
 
@@ -47,14 +48,14 @@ function isBoundaryMode(value: unknown): value is BoundaryMode {
 function parseImageLabel(value: unknown): ImageLabel | undefined {
   if (value === undefined) return undefined;
   if (!isRecord(value)) {
-    throw new Error("imageLabel が不正です");
+    throw new Error("Invalid imageLabel");
   }
-  const { sizeMb, boundary, targetBytes } = value;
+  const { sizeMb, boundary, targetBytes, locale } = value;
   if (!isSizeMb(sizeMb)) {
-    throw new Error(`imageLabel.sizeMb が不正です: ${String(sizeMb)}`);
+    throw new Error(`Invalid imageLabel.sizeMb: ${String(sizeMb)}`);
   }
   if (!isBoundaryMode(boundary)) {
-    throw new Error(`imageLabel.boundary が不正です: ${String(boundary)}`);
+    throw new Error(`Invalid imageLabel.boundary: ${String(boundary)}`);
   }
   if (
     typeof targetBytes !== "number" ||
@@ -62,26 +63,31 @@ function parseImageLabel(value: unknown): ImageLabel | undefined {
     targetBytes <= 0 ||
     targetBytes > MAX_TARGET_BYTES
   ) {
-    throw new Error(
-      `imageLabel.targetBytes が不正です: ${String(targetBytes)}`,
-    );
+    throw new Error(`Invalid imageLabel.targetBytes: ${String(targetBytes)}`);
   }
-  return { sizeMb, boundary, targetBytes };
+  let resolvedLocale: Locale = "ja";
+  if (locale !== undefined) {
+    if (typeof locale !== "string" || !isLocale(locale)) {
+      throw new Error(`Invalid imageLabel.locale: ${String(locale)}`);
+    }
+    resolvedLocale = locale;
+  }
+  return { sizeMb, boundary, targetBytes, locale: resolvedLocale };
 }
 
 /**
- * Worker が受け取る postMessage データを検証する。
- * 不正な type / 過大な targetBytes / 想定外の filename を拒否する。
+ * Validate Worker postMessage payload.
+ * Rejects bad type / oversized targetBytes / unexpected filename.
  */
 export function parseGenerateRequest(data: unknown): GenerateRequest {
   if (!isRecord(data)) {
-    throw new Error("リクエストがオブジェクトではありません");
+    throw new Error("Request must be an object");
   }
 
   const { type, targetBytes, filename, imageLabel } = data;
 
   if (!isFileType(type)) {
-    throw new Error(`不正な形式: ${String(type)}`);
+    throw new Error(`Invalid type: ${String(type)}`);
   }
 
   if (
@@ -91,17 +97,17 @@ export function parseGenerateRequest(data: unknown): GenerateRequest {
     targetBytes > MAX_TARGET_BYTES
   ) {
     throw new Error(
-      `不正な目標サイズ: ${String(targetBytes)}（1〜${MAX_TARGET_BYTES} の整数）`,
+      `Invalid target size: ${String(targetBytes)} (integer 1..${MAX_TARGET_BYTES})`,
     );
   }
 
   if (typeof filename !== "string" || !isValidFilename(filename)) {
-    throw new Error(`不正なファイル名: ${String(filename)}`);
+    throw new Error(`Invalid filename: ${String(filename)}`);
   }
 
   const parsedLabel = parseImageLabel(imageLabel);
   if (parsedLabel !== undefined && type !== "png" && type !== "jpeg") {
-    throw new Error("imageLabel は PNG / JPEG のみ指定できます");
+    throw new Error("imageLabel is only allowed for PNG / JPEG");
   }
 
   return {

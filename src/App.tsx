@@ -15,10 +15,14 @@ import {
 import { Selector } from "@astryxdesign/core/Selector";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
+import { useCallback, useMemo } from "react";
 import { useGenerateFile } from "./hooks/useGenerateFile";
 import { useQueryParams } from "./hooks/useQueryParams";
+import { formatBytes, LocaleProvider, sizeOptionLabel, useT } from "./i18n";
+import type { Locale } from "./i18n/locales";
 import { buildFilename } from "./lib/filename";
-import { formatBytes, sizeOptionLabel, targetBytesFor } from "./lib/sizes";
+import { toGeneratorParams } from "./lib/query";
+import { targetBytesFor } from "./lib/sizes";
 import {
   type BoundaryMode,
   FILE_TYPE_LABELS,
@@ -27,71 +31,103 @@ import {
   type SizeMb,
 } from "./lib/types";
 
-const FILE_TYPE_OPTIONS = [
-  {
-    type: "section" as const,
-    title: "画像",
-    options: [
-      { value: "png", label: FILE_TYPE_LABELS.png },
-      { value: "jpeg", label: FILE_TYPE_LABELS.jpeg },
-    ],
-  },
-  {
-    type: "section" as const,
-    title: "ドキュメント",
-    options: [
-      { value: "pdf", label: FILE_TYPE_LABELS.pdf },
-      { value: "docx", label: FILE_TYPE_LABELS.docx },
-      { value: "xlsx", label: FILE_TYPE_LABELS.xlsx },
-      { value: "pptx", label: FILE_TYPE_LABELS.pptx },
-    ],
-  },
-  {
-    type: "section" as const,
-    title: "テキスト",
-    options: [
-      { value: "txt", label: FILE_TYPE_LABELS.txt },
-      { value: "csv", label: FILE_TYPE_LABELS.csv },
-      { value: "json", label: FILE_TYPE_LABELS.json },
-    ],
-  },
-];
-
-const CLI_GENERATE_EXAMPLE = `# 10MBのPDFファイルを生成
-npx chobitfile -t pdf -s 10mb -o ./10mb.pdf`;
-
-const CLI_INSTALL_EXAMPLE = `# グローバルにインストール
-npm i -g chobitfile`;
-
 export function App() {
   const [params, setParams] = useQueryParams();
+
+  const setLocale = useCallback(
+    (lang: Locale) => {
+      setParams({ ...params, lang });
+    },
+    [params, setParams],
+  );
+
+  return (
+    <LocaleProvider locale={params.lang} setLocale={setLocale}>
+      <AppInner />
+    </LocaleProvider>
+  );
+}
+
+function AppInner() {
+  const [params, setParams] = useQueryParams();
+  const t = useT();
   const { generate, isGenerating, error, clearError } = useGenerateFile();
 
   const target = targetBytesFor(params.sizeMb, params.boundary);
   const filename = buildFilename(params.type, params.sizeMb, params.boundary);
+
+  const fileTypeOptions = useMemo(
+    () => [
+      {
+        type: "section" as const,
+        title: t.sections.image,
+        options: [
+          { value: "png", label: FILE_TYPE_LABELS.png },
+          { value: "jpeg", label: FILE_TYPE_LABELS.jpeg },
+        ],
+      },
+      {
+        type: "section" as const,
+        title: t.sections.document,
+        options: [
+          { value: "pdf", label: FILE_TYPE_LABELS.pdf },
+          { value: "docx", label: FILE_TYPE_LABELS.docx },
+          { value: "xlsx", label: FILE_TYPE_LABELS.xlsx },
+          { value: "pptx", label: FILE_TYPE_LABELS.pptx },
+        ],
+      },
+      {
+        type: "section" as const,
+        title: t.sections.text,
+        options: [
+          { value: "txt", label: FILE_TYPE_LABELS.txt },
+          { value: "csv", label: FILE_TYPE_LABELS.csv },
+          { value: "json", label: FILE_TYPE_LABELS.json },
+        ],
+      },
+    ],
+    [t],
+  );
+
+  const cliGenerateExample = `${t.cli.generateComment}
+npx chobitfile -t pdf -s 10mb -o ./10mb.pdf`;
+
+  const cliInstallExample = `${t.cli.installComment}
+npm i -g chobitfile`;
 
   return (
     <Center minHeight="100dvh" width="100%">
       <VStack gap={4} padding={4} width="100%" maxWidth={512}>
         <Card maxWidth={480} width="100%" padding={5}>
           <VStack gap={4}>
-            <VStack gap={1}>
+            <HStack gap={3} hAlign="between" vAlign="center">
               <Heading level={1}>chobitfile</Heading>
-            </VStack>
+              <SegmentedControl
+                label={t.lang.label}
+                value={params.lang}
+                onChange={(value) =>
+                  setParams({ ...params, lang: value as Locale })
+                }
+                isDisabled={isGenerating}
+              >
+                <SegmentedControlItem value="ja" label={t.lang.ja} />
+                <SegmentedControlItem value="en" label={t.lang.en} />
+              </SegmentedControl>
+            </HStack>
 
             <FormLayout direction="vertical">
               <Selector
-                label="ファイル形式"
+                label={t.form.fileType}
                 value={params.type}
                 onChange={(value) =>
                   setParams({ ...params, type: value as FileType })
                 }
-                options={FILE_TYPE_OPTIONS}
+                options={fileTypeOptions}
                 isDisabled={isGenerating}
               />
 
               <RadioList
-                label="サイズ"
+                label={t.form.size}
                 value={String(params.sizeMb)}
                 onChange={(value) =>
                   setParams({
@@ -100,19 +136,19 @@ export function App() {
                   })
                 }
                 isDisabled={isGenerating}
-                description="1 MB = 1,048,576 バイト（1024 系）"
+                description={t.form.sizeDescription}
               >
                 {SIZE_MB_OPTIONS.map((sizeMb) => (
                   <RadioListItem
                     key={sizeMb}
                     value={String(sizeMb)}
-                    label={sizeOptionLabel(sizeMb)}
+                    label={sizeOptionLabel(sizeMb, params.lang)}
                   />
                 ))}
               </RadioList>
 
               <SegmentedControl
-                label="境界モード"
+                label={t.form.boundary}
                 value={params.boundary}
                 onChange={(value) =>
                   setParams({
@@ -123,25 +159,35 @@ export function App() {
                 layout="fill"
                 isDisabled={isGenerating}
               >
-                <SegmentedControlItem value="exact" label="ちょうど" />
-                <SegmentedControlItem value="under" label="−1 バイト" />
-                <SegmentedControlItem value="over" label="+1 バイト" />
+                <SegmentedControlItem
+                  value="exact"
+                  label={t.form.boundaryExact}
+                />
+                <SegmentedControlItem
+                  value="under"
+                  label={t.form.boundaryUnder}
+                />
+                <SegmentedControlItem
+                  value="over"
+                  label={t.form.boundaryOver}
+                />
               </SegmentedControl>
             </FormLayout>
 
             <VStack gap={1}>
               <Text type="label" display="block">
-                生成内容
+                {t.form.preview}
               </Text>
               <Text type="supporting" display="block" hasTabularNumbers>
-                {filename} / {formatBytes(target)} バイト
+                {filename} / {formatBytes(target, params.lang)}{" "}
+                {t.form.previewBytes}
               </Text>
             </VStack>
 
             {error ? (
               <Banner
                 status="error"
-                title="生成に失敗しました"
+                title={t.errors.generateFailed}
                 description={error}
                 isDismissable
                 onDismiss={clearError}
@@ -149,12 +195,12 @@ export function App() {
             ) : null}
 
             <Button
-              label={isGenerating ? "生成中…" : "生成してダウンロード"}
+              label={isGenerating ? t.actions.generating : t.actions.generate}
               variant="primary"
               isLoading={isGenerating}
               isDisabled={isGenerating}
               onClick={() => {
-                void generate(params);
+                void generate(toGeneratorParams(params), params.lang);
               }}
             />
           </VStack>
@@ -163,16 +209,16 @@ export function App() {
         <Card maxWidth={480} width="100%" padding={5}>
           <VStack gap={3}>
             <VStack gap={1}>
-              <Heading level={2}>CLI でも使えます</Heading>
+              <Heading level={2}>{t.cli.heading}</Heading>
             </VStack>
             <CodeBlock
-              code={CLI_GENERATE_EXAMPLE}
+              code={cliGenerateExample}
               language="bash"
               hasCopyButton
               width="100%"
             />
             <CodeBlock
-              code={CLI_INSTALL_EXAMPLE}
+              code={cliInstallExample}
               language="bash"
               hasCopyButton
               width="100%"

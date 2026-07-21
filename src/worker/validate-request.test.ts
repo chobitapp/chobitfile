@@ -9,64 +9,80 @@ const validBase = {
 };
 
 describe("parseGenerateRequest", () => {
-  it("正当なリクエストを通す", () => {
+  it("accepts a valid request", () => {
     expect(parseGenerateRequest(validBase)).toEqual(validBase);
   });
 
-  it("imageLabel 付き PNG を通す", () => {
+  it("accepts PNG with imageLabel and defaults locale to ja", () => {
     const req = {
       ...validBase,
       imageLabel: {
-        sizeMb: 1,
-        boundary: "exact",
+        sizeMb: 1 as const,
+        boundary: "exact" as const,
         targetBytes: 1_048_576,
+      },
+    };
+    expect(parseGenerateRequest(req)).toEqual({
+      ...req,
+      imageLabel: { ...req.imageLabel, locale: "ja" },
+    });
+  });
+
+  it("accepts imageLabel.locale", () => {
+    const req = {
+      ...validBase,
+      imageLabel: {
+        sizeMb: 1 as const,
+        boundary: "exact" as const,
+        targetBytes: 1_048_576,
+        locale: "en" as const,
       },
     };
     expect(parseGenerateRequest(req)).toEqual(req);
   });
 
-  it("type が不正なら拒否する", () => {
+  it("rejects invalid type", () => {
     expect(() => parseGenerateRequest({ ...validBase, type: "mp4" })).toThrow(
-      /不正な形式/,
+      /Invalid type/,
     );
   });
 
-  it("targetBytes が過大なら拒否する", () => {
+  it("rejects oversized targetBytes", () => {
     expect(() =>
       parseGenerateRequest({
         ...validBase,
         targetBytes: MAX_TARGET_BYTES + 1,
       }),
-    ).toThrow(/不正な目標サイズ/);
+    ).toThrow(/Invalid target size/);
   });
 
-  it("targetBytes が非整数なら拒否する", () => {
+  it("rejects non-integer targetBytes", () => {
     expect(() =>
       parseGenerateRequest({ ...validBase, targetBytes: 1.5 }),
-    ).toThrow(/不正な目標サイズ/);
+    ).toThrow(/Invalid target size/);
   });
 
-  it("filename が想定外なら拒否する", () => {
+  it("rejects unexpected filename", () => {
     expect(() =>
       parseGenerateRequest({
         ...validBase,
         filename: "../evil.png",
       }),
-    ).toThrow(/不正なファイル名/);
+    ).toThrow(/Invalid filename/);
     expect(() =>
       parseGenerateRequest({
         ...validBase,
         filename: "chobitfile-99mb-exact.png",
       }),
-    ).toThrow(/不正なファイル名/);
+    ).toThrow(/Invalid filename/);
   });
 
-  it("非オブジェクトを拒否する", () => {
-    expect(() => parseGenerateRequest(null)).toThrow(/オブジェクト/);
-    expect(() => parseGenerateRequest("png")).toThrow(/オブジェクト/);
+  it("rejects non-objects", () => {
+    expect(() => parseGenerateRequest(null)).toThrow(/object/);
+    expect(() => parseGenerateRequest("png")).toThrow(/object/);
   });
 
-  it("imageLabel を PDF に付けたら拒否する", () => {
+  it("rejects imageLabel on PDF", () => {
     expect(() =>
       parseGenerateRequest({
         type: "pdf",

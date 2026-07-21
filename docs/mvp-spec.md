@@ -37,7 +37,7 @@
 | 境界モード | `exact`（ちょうど） / `under`（−1 バイト） / `over`（+1 バイト） |
 | UI | 1 画面の設定パネル（形式・サイズ・境界 → 生成） |
 | 生成場所 | ブラウザ（Web Worker） |
-| 言語 | 日本語のみ |
+| 言語 | Web: 日本語 / 英語（`lang` クエリ）。CLI: 英語固定 |
 | テーマ | ライト固定 |
 | URL | クエリ双方向同期 |
 | テスト | 生成器の単体テスト中心 |
@@ -61,7 +61,7 @@ Web MVP と並行して npm CLI（`chobitfile`）を提供する。詳細は [CL
 - MP4 / MP3 などメディア形式
 - サーバー生成・ストレージ・認証・課金
 - アクセス解析・アプリ内イベント計測
-- 日英 i18n・ダークモード切替
+- ダークモード切替
 - UI の E2E（Playwright 等）
 - CI 自動デプロイ
 - 見た目のあるダミー画像・本文入り DOCX
@@ -186,15 +186,17 @@ chobitfile-{sizeLabel}mb-{boundary}.{ext}
 | `type` | `png` / `jpeg` / `docx` / `xlsx` / `pptx` / `pdf` / `txt` / `csv` / `json` |
 | `size` | `1` / `3` / `5` / `10` / `20` |
 | `boundary` | `exact` / `under` / `over` |
+| `lang` | `ja` / `en`（default: `ja`） |
 
-例: `/?type=png&size=10&boundary=under`
+例: `/?type=png&size=10&boundary=under&lang=en`
 
 不正・未知の値は無視し、該当項目をデフォルトにフォールバックする。
 
 ### 6.4 テーマ・言語
 
-- 日本語のみ
-- ライト固定（OS 追従・トグルなし）
+- Web: 日本語 / 英語。メッセージ辞書 + React Context。切替は UI と `lang` クエリで双方向同期
+- CLI: 英語固定（ヘルプ・エラー・進捗）
+- テーマ: ライト固定（OS 追従・トグルなし）
 
 ---
 
@@ -264,3 +266,4 @@ UI の E2E とデプロイ後のブラウザ手動確認は必須にしない（
 | 2026-07-21 | 初版。グリル結果に基づき MVP 決定を固定 |
 | 2026-07-21 | 形式追加: JPEG / XLSX / PPTX / PDF / TXT / CSV / JSON |
 | 2026-07-21 | CLI（npm）を追加。任意サイズは CLI のみ、上限は Web 準拠 |
+| 2026-07-21 | Web 日英 i18n（`lang` クエリ）。CLI は英語固定 |

@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { imageLabelFromParams } from "../generators";
+import type { Locale } from "../i18n/locales";
 import { downloadBlob } from "../lib/download";
 import { buildFilename } from "../lib/filename";
 import { targetBytesFor } from "../lib/sizes";
@@ -27,7 +28,7 @@ export function useGenerateFile() {
   }, []);
 
   const generate = useCallback(
-    async (params: GeneratorParams) => {
+    async (params: GeneratorParams, locale: Locale = "ja") => {
       setStatus("generating");
       setError(null);
 
@@ -43,7 +44,12 @@ export function useGenerateFile() {
         filename,
         imageLabel:
           params.type === "png" || params.type === "jpeg"
-            ? imageLabelFromParams(params.sizeMb, params.boundary, targetBytes)
+            ? imageLabelFromParams(
+                params.sizeMb,
+                params.boundary,
+                targetBytes,
+                locale,
+              )
             : undefined,
       };
 
@@ -59,7 +65,7 @@ export function useGenerateFile() {
             const onError = (event: ErrorEvent) => {
               worker.removeEventListener("message", onMessage);
               worker.removeEventListener("error", onError);
-              reject(new Error(event.message || "Worker エラー"));
+              reject(new Error(event.message || "Worker error"));
             };
             worker.addEventListener("message", onMessage);
             worker.addEventListener("error", onError);
@@ -74,7 +80,7 @@ export function useGenerateFile() {
         const blob = new Blob([response.buffer], { type: response.mimeType });
         if (blob.size !== targetBytes) {
           throw new Error(
-            `ダウンロード前サイズ不一致: expected ${targetBytes}, got ${blob.size}`,
+            `Size mismatch before download: expected ${targetBytes}, got ${blob.size}`,
           );
         }
         downloadBlob(blob, response.filename);

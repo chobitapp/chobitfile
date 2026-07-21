@@ -8,6 +8,6 @@ runCli(argv)
   })
   .catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
-    process.stderr.write(`致命的エラー: ${message}\n`);
+    process.stderr.write(`Fatal error: ${message}\n`);
     process.exitCode = 1;
   });

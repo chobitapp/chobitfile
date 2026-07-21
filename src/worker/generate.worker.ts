@@ -30,7 +30,7 @@ workerScope.onmessage = (event: MessageEvent<unknown>) => {
       const bytes = await generateFile(type, targetBytes, { imageLabel });
       if (bytes.byteLength !== targetBytes) {
         throw new Error(
-          `生成サイズ不一致: expected ${targetBytes}, got ${bytes.byteLength}`,
+          `Generated size mismatch: expected ${targetBytes}, got ${bytes.byteLength}`,
         );
       }
       const buffer = bytes.buffer.slice(

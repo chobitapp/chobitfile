@@ -7,7 +7,7 @@ import { buildCliFilename } from "./filename";
 
 export type RunResult = {
   exitCode: number;
-  /** テスト用: 書き出したパス（stdout のときは null） */
+  /** Test helper: written path (null when stdout) */
   outputPath: string | null;
   targetBytes: number;
   filename: string;
@@ -99,7 +99,9 @@ export async function runCli(
   }
 
   if (outputPath !== null && !args.force && (await pathExists(outputPath))) {
-    process.stderr.write(`既に存在します（上書きは --force）: ${outputPath}\n`);
+    process.stderr.write(
+      `File already exists (use --force to overwrite): ${outputPath}\n`,
+    );
     return {
       exitCode: 1,
       outputPath,
@@ -110,14 +112,14 @@ export async function runCli(
 
   logInfo(
     args.quiet,
-    `生成中: ${args.type} / ${args.targetBytes.toLocaleString("en-US")} bytes …`,
+    `Generating: ${args.type} / ${args.targetBytes.toLocaleString("en-US")} bytes …`,
   );
 
   try {
     const bytes = await generateFile(args.type, args.targetBytes);
     if (bytes.byteLength !== args.targetBytes) {
       throw new Error(
-        `生成サイズ不一致: expected ${args.targetBytes}, got ${bytes.byteLength}`,
+        `Generated size mismatch: expected ${args.targetBytes}, got ${bytes.byteLength}`,
       );
     }
 
@@ -131,8 +133,8 @@ export async function runCli(
     logInfo(
       args.quiet,
       toStdout
-        ? `完了: ${args.targetBytes.toLocaleString("en-US")} bytes → stdout`
-        : `完了: ${outputPath}（${args.targetBytes.toLocaleString("en-US")} bytes）`,
+        ? `Done: ${args.targetBytes.toLocaleString("en-US")} bytes → stdout`
+        : `Done: ${outputPath} (${args.targetBytes.toLocaleString("en-US")} bytes)`,
     );
 
     return {
@@ -143,7 +145,7 @@ export async function runCli(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    process.stderr.write(`エラー: ${message}\n`);
+    process.stderr.write(`Error: ${message}\n`);
     return {
       exitCode: 1,
       outputPath,
