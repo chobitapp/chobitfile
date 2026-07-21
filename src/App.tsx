@@ -9,6 +9,7 @@ import {
   SegmentedControl,
   SegmentedControlItem,
 } from "@astryxdesign/core/SegmentedControl";
+import { Selector } from "@astryxdesign/core/Selector";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { useGenerateFile } from "./hooks/useGenerateFile";
@@ -17,10 +18,41 @@ import { buildFilename } from "./lib/filename";
 import { formatBytes, sizeOptionLabel, targetBytesFor } from "./lib/sizes";
 import {
   type BoundaryMode,
+  FILE_TYPE_LABELS,
   type FileType,
   SIZE_MB_OPTIONS,
   type SizeMb,
 } from "./lib/types";
+
+const FILE_TYPE_OPTIONS = [
+  {
+    type: "section" as const,
+    title: "画像",
+    items: [
+      { value: "png", label: FILE_TYPE_LABELS.png },
+      { value: "jpeg", label: FILE_TYPE_LABELS.jpeg },
+    ],
+  },
+  {
+    type: "section" as const,
+    title: "ドキュメント",
+    items: [
+      { value: "pdf", label: FILE_TYPE_LABELS.pdf },
+      { value: "docx", label: FILE_TYPE_LABELS.docx },
+      { value: "xlsx", label: FILE_TYPE_LABELS.xlsx },
+      { value: "pptx", label: FILE_TYPE_LABELS.pptx },
+    ],
+  },
+  {
+    type: "section" as const,
+    title: "テキスト",
+    items: [
+      { value: "txt", label: FILE_TYPE_LABELS.txt },
+      { value: "csv", label: FILE_TYPE_LABELS.csv },
+      { value: "json", label: FILE_TYPE_LABELS.json },
+    ],
+  },
+];
 
 export function App() {
   const [params, setParams] = useQueryParams();
@@ -42,18 +74,15 @@ export function App() {
             </VStack>
 
             <FormLayout direction="vertical">
-              <SegmentedControl
+              <Selector
                 label="ファイル形式"
                 value={params.type}
                 onChange={(value) =>
                   setParams({ ...params, type: value as FileType })
                 }
-                layout="fill"
+                options={FILE_TYPE_OPTIONS}
                 isDisabled={isGenerating}
-              >
-                <SegmentedControlItem value="png" label="PNG" />
-                <SegmentedControlItem value="docx" label="DOCX" />
-              </SegmentedControl>
+              />
 
               <RadioList
                 label="サイズ"

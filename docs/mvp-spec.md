@@ -18,7 +18,7 @@
 想定ユースケース:
 
 - ファイルアップロードのサイズ上限・境界値テスト
-- 形式バリデーション（PNG / DOCX として受理されるか）の確認
+- 形式バリデーション（PNG / JPEG / PDF / Office / テキスト等として受理されるか）の確認
 
 サーバー側での生成・保存・転送は行わない。
 
@@ -30,7 +30,7 @@
 
 | 項目 | 内容 |
 |---|---|
-| 形式 | PNG, DOCX |
+| 形式 | PNG, JPEG, DOCX, XLSX, PPTX, PDF, TXT, CSV, JSON |
 | サイズ選択肢 | 1 / 3 / 5 / 10 / 20 MB |
 | サイズ単位 | 1024 系。`1 MB = 1,048,576` バイト |
 | サイズ厳密性 | 生成ファイルのバイト数が目標値と **完全一致** |
@@ -46,7 +46,7 @@
 
 ### 2.2 含まない（後回し）
 
-- PDF / JPEG / CSV / その他形式
+- MP4 / MP3 などメディア形式
 - サーバー生成・ストレージ・認証・課金
 - アクセス解析・アプリ内イベント計測
 - 日英 i18n・ダークモード切替
@@ -95,12 +95,31 @@ UI にはラベルとバイト数を併記する（例: `1 MB（1,048,576 バイ
 - チャンクの CRC-32 は仕様どおり正しく計算する
 - プレビューは識別用の簡易表示でよい（高度なデザイン性は求めない）
 
-### 4.2 DOCX
+### 4.2 JPEG
 
-- **最小有効 DOCX**（Open XML の ZIP パッケージ）として Word / LibreOffice 等が開けること
-- 必須エントリ（`[Content_Types].xml`、リレーション、最小 document 等）を正規に含める
+- **有効 JPEG** としてデコーダが受理できること
+- 最小 1×1 画像をベースにし、目標サイズまでの不足分は **COM セグメント**（コメント）で埋める
+- ファイル末尾は EOI（`FF D9`）であること
+
+### 4.3 DOCX / XLSX / PPTX
+
+- **最小有効 Office Open XML**（ZIP パッケージ）として各アプリ / LibreOffice 等が開けること
+- 必須エントリ（`[Content_Types].xml`、リレーション、最小本文部品等）を正規に含める
 - 目標サイズまでの不足分は ZIP 内の **ダミー部品（store / 無圧縮）** で調整する
 - 本文の装飾や長文は求めない
+
+### 4.4 PDF
+
+- **最小有効 PDF** としてビューアが開けること（Catalog / Pages / Page、xref、trailer、`%%EOF`）
+- 目標サイズまでの不足分は **未使用ストリームオブジェクト** の内容で埋める
+- オフセット・Length・startxref は固定桁で組み立て、サイズ厳密一致を保証する
+
+### 4.5 TXT / CSV / JSON
+
+- バイト数が目標と完全一致すること
+- TXT: プレーンテキスト（識別用ヘッダ + パディング文字）
+- CSV: ヘッダ行 + 1 データ行（パディング列）。区切りを壊さない文字のみで埋める
+- JSON: パース可能なオブジェクト。`padding` 文字列フィールドでサイズ調整
 
 ---
 
@@ -116,7 +135,8 @@ chobitfile-{sizeLabel}mb-{boundary}.{ext}
 
 - `chobitfile-10mb-exact.png`
 - `chobitfile-1mb-under.docx`
-- `chobitfile-5mb-over.png`
+- `chobitfile-5mb-over.pdf`
+- `chobitfile-3mb-exact.json`
 
 `sizeLabel` は 1 / 3 / 5 / 10 / 20。`boundary` は `exact` / `under` / `over`。
 
@@ -127,7 +147,7 @@ chobitfile-{sizeLabel}mb-{boundary}.{ext}
 ### 6.1 レイアウト
 
 - 1 画面・設定パネル型
-- コントロール: 形式 / サイズ / 境界モード / 生成ボタン
+- コントロール: 形式（Selector・セクション分け） / サイズ / 境界モード / 生成ボタン
 - 生成中は簡易プログレス（「生成中…」等）と操作の無効化
 - 成功時は Blob をダウンロード（`a[download]` 等）。File System Access API は使わない
 - 画面上部または近傍に、短い注記:
@@ -148,7 +168,7 @@ chobitfile-{sizeLabel}mb-{boundary}.{ext}
 
 | キー | 値 |
 |---|---|
-| `type` | `png` / `docx` |
+| `type` | `png` / `jpeg` / `docx` / `xlsx` / `pptx` / `pdf` / `txt` / `csv` / `json` |
 | `size` | `1` / `3` / `5` / `10` / `20` |
 | `boundary` | `exact` / `under` / `over` |
 
@@ -186,6 +206,7 @@ chobitfile-{sizeLabel}mb-{boundary}.{ext}
 ### 7.2 モジュール指針
 
 - 形式ごと: `src/generators/png.ts`, `src/generators/docx.ts` など
+- OOXML 共有: `src/generators/ooxml.ts`（store ZIP + パディング）
 - 共有: CRC32・バイト書き込み・サイズ計算ヘルパ
 - Worker エントリから生成 API を呼ぶ
 - UI は生成詳細を知らず、`type` / 目標バイト数 / ファイル名だけを渡す
@@ -200,8 +221,11 @@ chobitfile-{sizeLabel}mb-{boundary}.{ext}
 
 1. 各形式 × 代表サイズ × 3 境界で **バイト数が目標と一致**
 2. PNG: シグネチャ・IHDR / IEND 等の構造上の妥当性（必要最小）
-3. DOCX: ZIP ローカルファイルヘッダ等、最小限のパッケージ妥当性
-4. ファイル名ヘルパの出力
+3. JPEG: シグネチャ・EOI の妥当性
+4. DOCX / XLSX / PPTX: ZIP ローカルファイルヘッダ等、最小限のパッケージ妥当性
+5. PDF: `%PDF-` シグネチャ・`%%EOF`・必須キーワード
+6. JSON: `JSON.parse` で受理されること
+7. ファイル名ヘルパの出力
 
 UI の E2E とデプロイ後のブラウザ手動確認は必須にしない（手動で足りる範囲）。
 
@@ -221,3 +245,4 @@ UI の E2E とデプロイ後のブラウザ手動確認は必須にしない（
 | 日付 | 内容 |
 |---|---|
 | 2026-07-21 | 初版。グリル結果に基づき MVP 決定を固定 |
+| 2026-07-21 | 形式追加: JPEG / XLSX / PPTX / PDF / TXT / CSV / JSON |

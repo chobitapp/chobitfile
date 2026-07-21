@@ -1,5 +1,6 @@
 import { utf8 } from "../lib/bytes";
-import { buildStoreZip, type ZipEntry } from "./zip";
+import { generatePaddedOoxml } from "./ooxml";
+import type { ZipEntry } from "./zip";
 
 const CONTENT_TYPES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -50,47 +51,7 @@ function fixedEntries(): ZipEntry[] {
  * 余りは word/padding.bin（store）で埋める。
  */
 export function generateDocx(targetBytes: number): Uint8Array {
-  if (!Number.isInteger(targetBytes) || targetBytes <= 0) {
-    throw new Error(`不正な目標サイズ: ${targetBytes}`);
-  }
-
-  const fixed = fixedEntries();
-  const nameLen = utf8(PADDING_NAME).byteLength;
-  // 追加エントリ分: local(30+name) + data + central(46+name)
-  const paddingEntryOverhead = 30 + nameLen + 46 + nameLen;
-
-  const baseZip = buildStoreZip(fixed);
-  const paddingDataLen =
-    targetBytes - baseZip.byteLength - paddingEntryOverhead;
-
-  if (paddingDataLen < 0) {
-    throw new Error(
-      `目標サイズ ${targetBytes} は最小 DOCX（${baseZip.byteLength + paddingEntryOverhead}）より小さい`,
-    );
-  }
-
-  const padding = new Uint8Array(paddingDataLen);
-  const marker = utf8("chobitfile-padding");
-  if (marker.byteLength <= paddingDataLen) {
-    padding.set(marker, 0);
-  }
-
-  const out = buildStoreZip([...fixed, { name: PADDING_NAME, data: padding }]);
-
-  if (out.byteLength !== targetBytes) {
-    throw new Error(
-      `DOCX サイズ不一致: expected ${targetBytes}, got ${out.byteLength}`,
-    );
-  }
-  return out;
+  return generatePaddedOoxml(targetBytes, fixedEntries(), PADDING_NAME, "DOCX");
 }
 
-export function isZipLocalHeader(data: Uint8Array): boolean {
-  return (
-    data.byteLength >= 4 &&
-    data[0] === 0x50 &&
-    data[1] === 0x4b &&
-    data[2] === 0x03 &&
-    data[3] === 0x04
-  );
-}
+export { isZipLocalHeader } from "./ooxml";

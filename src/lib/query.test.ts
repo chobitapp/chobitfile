@@ -12,9 +12,22 @@ describe("query", () => {
   });
 
   it("不正値はデフォルトへフォールバック", () => {
-    expect(paramsFromSearch("?type=pdf&size=99&boundary=nope")).toEqual(
+    expect(paramsFromSearch("?type=mp4&size=99&boundary=nope")).toEqual(
       DEFAULT_PARAMS,
     );
+  });
+
+  it("追加形式のクエリを読む", () => {
+    expect(paramsFromSearch("?type=pdf&size=5&boundary=over")).toEqual({
+      type: "pdf",
+      sizeMb: 5,
+      boundary: "over",
+    });
+    expect(paramsFromSearch("?type=json&size=1&boundary=exact")).toEqual({
+      type: "json",
+      sizeMb: 1,
+      boundary: "exact",
+    });
   });
 
   it("往復できる", () => {
