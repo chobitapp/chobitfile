@@ -1,6 +1,6 @@
 {
   "name": "chobitfile",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "指定サイズ・形式のダミーファイルをローカル生成する CLI / Web ツール",
   "type": "module",
   "bin": {
