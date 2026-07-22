@@ -1,6 +1,6 @@
 {
   "name": "chobitfile",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Generate dummy files of a given size and format.",
   "type": "module",
   "bin": {
