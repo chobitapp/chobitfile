@@ -229,7 +229,7 @@ npm i -g chobitfile`;
         <Center axis="horizontal">
           <HStack gap={3} vAlign="center">
             <Link
-              href="https://github.com/zaru/chobitfile"
+              href="https://github.com/chobitapp/chobitfile"
               isExternalLink
               isStandalone
             >
