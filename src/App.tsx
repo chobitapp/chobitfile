@@ -126,7 +126,7 @@ npm i -g chobitfile`;
   const isSizeMode = params.mode === "size";
 
   return (
-    <Center minHeight="100dvh" width="100%">
+    <Center axis="horizontal" minHeight="100dvh" width="100%">
       <VStack gap={4} padding={4} width="100%" maxWidth={512}>
         <Card maxWidth={480} width="100%" padding={5}>
           <VStack gap={4}>
