@@ -414,25 +414,27 @@ npm i -g chobitfile`;
           </VStack>
         </Card>
 
-        <Card maxWidth={480} width="100%" padding={5}>
-          <VStack gap={3}>
-            <VStack gap={1}>
-              <Heading level={2}>{t.cli.heading}</Heading>
+        {isSizeMode && (
+          <Card maxWidth={480} width="100%" padding={5}>
+            <VStack gap={3}>
+              <VStack gap={1}>
+                <Heading level={2}>{t.cli.heading}</Heading>
+              </VStack>
+              <CodeBlock
+                code={cliGenerateExample}
+                language="bash"
+                hasCopyButton
+                width="100%"
+              />
+              <CodeBlock
+                code={cliInstallExample}
+                language="bash"
+                hasCopyButton
+                width="100%"
+              />
             </VStack>
-            <CodeBlock
-              code={cliGenerateExample}
-              language="bash"
-              hasCopyButton
-              width="100%"
-            />
-            <CodeBlock
-              code={cliInstallExample}
-              language="bash"
-              hasCopyButton
-              width="100%"
-            />
-          </VStack>
-        </Card>
+          </Card>
+        )}
 
         <Center axis="horizontal">
           <HStack gap={3} vAlign="center">
