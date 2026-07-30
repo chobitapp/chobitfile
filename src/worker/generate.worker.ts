@@ -58,6 +58,7 @@ async function handleBulk(
   const bytes = await generateBulkZip({
     count: request.count,
     types: request.types,
+    directories: request.directories === true,
   });
   const buffer = toTransferableBuffer(bytes);
   return {

@@ -68,10 +68,14 @@ export const DEFAULT_GENERATOR_PARAMS: GeneratorParams = {
 };
 
 /** 大量生成 UI 用デフォルト（URL 同期対象外・ローカル state） */
-export const DEFAULT_BULK_COUNT = 100;
+export const DEFAULT_BULK_COUNT = 1000;
 export const DEFAULT_BULK_TYPES: readonly FileType[] = FILE_TYPES;
+/** ディレクトリ配置のデフォルト（オフ） */
+export const DEFAULT_BULK_DIRECTORIES = false;
 export const BULK_COUNT_MIN = 1;
 export const BULK_COUNT_MAX = 10_000;
+/** ディレクトリ配置時の最大階層（ルート直下を 0 とする） */
+export const BULK_DIR_MAX_DEPTH = 2;
 
 /** @deprecated 互換用。DEFAULT_GENERATOR_PARAMS を使う */
 export const DEFAULT_PARAMS = DEFAULT_GENERATOR_PARAMS;

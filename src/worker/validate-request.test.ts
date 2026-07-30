@@ -123,7 +123,32 @@ describe("parseBulkGenerateRequest", () => {
       count: 100,
       types: ["png", "pdf"],
       filename: "chobitfile-bulk-100.zip",
+      directories: false,
     });
+  });
+
+  it("accepts directories flag", () => {
+    expect(
+      parseBulkGenerateRequest({
+        ...validBulk,
+        directories: true,
+      }),
+    ).toEqual({
+      mode: "bulk",
+      count: 100,
+      types: ["png", "pdf"],
+      filename: "chobitfile-bulk-100.zip",
+      directories: true,
+    });
+  });
+
+  it("rejects non-boolean directories", () => {
+    expect(() =>
+      parseBulkGenerateRequest({
+        ...validBulk,
+        directories: "yes",
+      }),
+    ).toThrow(/Invalid bulk directories/);
   });
 
   it("dedupes types", () => {
@@ -137,6 +162,7 @@ describe("parseBulkGenerateRequest", () => {
       count: 100,
       types: ["png", "txt"],
       filename: "chobitfile-bulk-100.zip",
+      directories: false,
     });
   });
 

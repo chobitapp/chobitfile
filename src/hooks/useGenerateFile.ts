@@ -16,6 +16,8 @@ type Status = "idle" | "generating" | "error";
 export type BulkGenerateParams = {
   count: number;
   types: readonly FileType[];
+  /** 最大2階層までのディレクトリにランダム配置（デフォルト false） */
+  directories?: boolean;
 };
 
 export function useGenerateFile() {
@@ -116,6 +118,7 @@ export function useGenerateFile() {
         count: params.count,
         types: [...params.types],
         filename: buildBulkZipFilename(params.count),
+        directories: params.directories === true,
       };
 
       try {

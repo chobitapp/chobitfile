@@ -29,9 +29,13 @@ export const ja = {
       countUnits: "件",
       fileTypes: "ファイル形式",
       selectAll: "すべて選択",
+      directories: "ディレクトリに配置",
+      directoriesDescription:
+        "有効にすると、最大2階層までのディレクトリにファイルをランダム配置します",
       preview: "生成内容",
       previewFiles: "ファイル",
       previewZip: "ZIP",
+      previewWithDirs: "ディレクトリあり",
       typesRequired: "形式を1つ以上選んでください",
     },
     actions: {
@@ -93,9 +97,12 @@ export type Messages = {
       countUnits: string;
       fileTypes: string;
       selectAll: string;
+      directories: string;
+      directoriesDescription: string;
       preview: string;
       previewFiles: string;
       previewZip: string;
+      previewWithDirs: string;
       typesRequired: string;
     };
     actions: {

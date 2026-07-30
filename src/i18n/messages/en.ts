@@ -31,9 +31,13 @@ export const en: Messages = {
       countUnits: "files",
       fileTypes: "File types",
       selectAll: "Select all",
+      directories: "Place in directories",
+      directoriesDescription:
+        "When enabled, files are randomly placed in directories up to 2 levels deep",
       preview: "Output",
       previewFiles: "files",
       previewZip: "ZIP",
+      previewWithDirs: "with directories",
       typesRequired: "Select at least one file type",
     },
     actions: {

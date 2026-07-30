@@ -27,6 +27,8 @@ export type BulkGenerateRequest = {
   count: number;
   types: FileType[];
   filename: string;
+  /** 最大2階層までのディレクトリにランダム配置（省略時 false） */
+  directories?: boolean;
 };
 
 export type WorkerRequest = GenerateRequest | BulkGenerateRequest;
@@ -161,7 +163,7 @@ export function parseBulkGenerateRequest(data: unknown): BulkGenerateRequest {
     throw new Error("Expected bulk generate request");
   }
 
-  const { count, types, filename } = data;
+  const { count, types, filename, directories } = data;
 
   if (
     typeof count !== "number" ||
@@ -180,11 +182,16 @@ export function parseBulkGenerateRequest(data: unknown): BulkGenerateRequest {
     throw new Error(`Invalid bulk filename: ${String(filename)}`);
   }
 
+  if (directories !== undefined && typeof directories !== "boolean") {
+    throw new Error(`Invalid bulk directories: ${String(directories)}`);
+  }
+
   return {
     mode: "bulk",
     count,
     types: parsedTypes,
     filename,
+    directories: directories === true,
   };
 }
 

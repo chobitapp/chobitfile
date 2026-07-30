@@ -15,6 +15,7 @@ import {
   SegmentedControlItem,
 } from "@astryxdesign/core/SegmentedControl";
 import { Selector } from "@astryxdesign/core/Selector";
+import { Switch } from "@astryxdesign/core/Switch";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { useCallback, useMemo, useState } from "react";
@@ -30,6 +31,7 @@ import {
   BULK_COUNT_MAX,
   BULK_COUNT_MIN,
   DEFAULT_BULK_COUNT,
+  DEFAULT_BULK_DIRECTORIES,
   DEFAULT_BULK_TYPES,
   FILE_TYPE_LABELS,
   FILE_TYPES,
@@ -66,6 +68,9 @@ function AppInner() {
   const [bulkTypes, setBulkTypes] = useState<string[]>(() => [
     ...DEFAULT_BULK_TYPES,
   ]);
+  const [bulkDirectories, setBulkDirectories] = useState(
+    DEFAULT_BULK_DIRECTORIES,
+  );
 
   const target = targetBytesFor(params.sizeMb, params.boundary);
   const filename = buildFilename(params.type, params.sizeMb, params.boundary);
@@ -297,6 +302,15 @@ npm i -g chobitfile`;
                           }
                     }
                   />
+
+                  <Switch
+                    label={t.bulk.form.directories}
+                    description={t.bulk.form.directoriesDescription}
+                    value={bulkDirectories}
+                    onChange={setBulkDirectories}
+                    labelSpacing="spread"
+                    isDisabled={isGenerating}
+                  />
                 </FormLayout>
 
                 <VStack gap={1}>
@@ -307,6 +321,7 @@ npm i -g chobitfile`;
                     {bulkZipFilename} / {bulkCount.toLocaleString(params.lang)}{" "}
                     {t.bulk.form.previewFiles}
                     {bulkTypeLabels ? ` / ${bulkTypeLabels}` : ""}
+                    {bulkDirectories ? ` / ${t.bulk.form.previewWithDirs}` : ""}
                   </Text>
                 </VStack>
 
@@ -333,6 +348,7 @@ npm i -g chobitfile`;
                     void generateBulk({
                       count: bulkCount,
                       types: selectedBulkTypes,
+                      directories: bulkDirectories,
                     });
                   }}
                 />
