@@ -7,6 +7,11 @@ export const en: Messages = {
     description:
       "Generate dummy files of a specified size in your browser. Formats: PNG, JPEG, DOCX, XLSX, PPTX, PDF, TXT, CSV, JSON",
   },
+  mode: {
+    label: "Generation mode",
+    size: "By size",
+    bulk: "Bulk",
+  },
   form: {
     fileType: "File type",
     size: "Size",
@@ -17,6 +22,21 @@ export const en: Messages = {
     boundaryOver: "+1 byte",
     preview: "Output",
     previewBytes: "bytes",
+  },
+  bulk: {
+    form: {
+      count: "Number of files",
+      countDescription: "Choose from 1 to 10,000 files",
+      countUnits: "files",
+      fileTypes: "File types",
+      selectAll: "Select all",
+      preview: "Output",
+      previewFiles: "files",
+    },
+    actions: {
+      generateComingSoon: "Generate and download (coming soon)",
+      comingSoonTooltip: "Bulk generation is not implemented yet",
+    },
   },
   sections: {
     image: "Images",

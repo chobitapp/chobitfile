@@ -13,6 +13,8 @@ import {
   DEFAULT_GENERATOR_PARAMS,
   FILE_TYPES,
   type FileType,
+  GENERATE_MODES,
+  type GenerateMode,
   type GeneratorParams,
   SIZE_MB_OPTIONS,
   type SizeMb,
@@ -28,6 +30,10 @@ function isSizeMb(value: number): value is SizeMb {
 
 function isBoundary(value: string): value is BoundaryMode {
   return (BOUNDARY_MODES as readonly string[]).includes(value);
+}
+
+function isGenerateMode(value: string): value is GenerateMode {
+  return (GENERATE_MODES as readonly string[]).includes(value);
 }
 
 /** size クエリ（1 / 3 / 5 / 10 / 20）を SizeMb に変換する */
@@ -56,6 +62,9 @@ export const generatorSearchParams = {
   boundary: parseAsStringLiteral(BOUNDARY_MODES)
     .withDefault(DEFAULT_GENERATOR_PARAMS.boundary)
     .withOptions({ clearOnDefault: false }),
+  mode: parseAsStringLiteral(GENERATE_MODES)
+    .withDefault(DEFAULT_APP_PARAMS.mode)
+    .withOptions({ clearOnDefault: true }),
   // lang 未指定時はブラウザ設定。default と一致する値は URL から省き、共有時に受信側の設定を活かす
   lang: parseAsStringLiteral(LOCALES)
     .withDefault(detectBrowserLocale())
@@ -74,6 +83,7 @@ export function paramsFromSearch(search: string): AppParams {
   const typeRaw = q.get("type") ?? "";
   const sizeRaw = Number(q.get("size"));
   const boundaryRaw = q.get("boundary") ?? "";
+  const modeRaw = q.get("mode") ?? "";
   const langRaw = q.get("lang") ?? "";
 
   return {
@@ -82,6 +92,7 @@ export function paramsFromSearch(search: string): AppParams {
     boundary: isBoundary(boundaryRaw)
       ? boundaryRaw
       : DEFAULT_APP_PARAMS.boundary,
+    mode: isGenerateMode(modeRaw) ? modeRaw : DEFAULT_APP_PARAMS.mode,
     lang: isLocale(langRaw) ? langRaw : detectBrowserLocale(),
   };
 }
@@ -93,6 +104,9 @@ export function searchFromParams(params: AppParams): string {
     boundary: params.boundary,
     lang: params.lang,
   });
+  if (params.mode !== DEFAULT_APP_PARAMS.mode) {
+    q.set("mode", params.mode);
+  }
   return `?${q.toString()}`;
 }
 

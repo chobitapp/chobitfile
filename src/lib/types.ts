@@ -19,6 +19,9 @@ export type SizeMb = (typeof SIZE_MB_OPTIONS)[number];
 export const BOUNDARY_MODES = ["exact", "under", "over"] as const;
 export type BoundaryMode = (typeof BOUNDARY_MODES)[number];
 
+export const GENERATE_MODES = ["size", "bulk"] as const;
+export type GenerateMode = (typeof GENERATE_MODES)[number];
+
 export { LOCALES, type Locale };
 
 export type GeneratorParams = {
@@ -27,9 +30,10 @@ export type GeneratorParams = {
   boundary: BoundaryMode;
 };
 
-/** Web UI の URL 同期状態（生成パラメータ + 言語） */
+/** Web UI の URL 同期状態（生成パラメータ + 言語 + モード） */
 export type AppParams = GeneratorParams & {
   lang: Locale;
+  mode: GenerateMode;
 };
 
 export const MIME_TYPES: Record<FileType, string> = {
@@ -63,10 +67,17 @@ export const DEFAULT_GENERATOR_PARAMS: GeneratorParams = {
   boundary: "exact",
 };
 
+/** 大量生成 UI 用デフォルト（URL 同期対象外・ローカル state） */
+export const DEFAULT_BULK_COUNT = 100;
+export const DEFAULT_BULK_TYPES: readonly FileType[] = FILE_TYPES;
+export const BULK_COUNT_MIN = 1;
+export const BULK_COUNT_MAX = 10_000;
+
 /** @deprecated 互換用。DEFAULT_GENERATOR_PARAMS を使う */
 export const DEFAULT_PARAMS = DEFAULT_GENERATOR_PARAMS;
 
 export const DEFAULT_APP_PARAMS: AppParams = {
   ...DEFAULT_GENERATOR_PARAMS,
   lang: DEFAULT_LOCALE,
+  mode: "size",
 };

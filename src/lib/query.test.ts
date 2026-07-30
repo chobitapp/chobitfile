@@ -10,11 +10,12 @@ afterEach(() => {
 describe("query", () => {
   it("reads a valid query", () => {
     expect(
-      paramsFromSearch("?type=docx&size=10&boundary=under&lang=en"),
+      paramsFromSearch("?type=docx&size=10&boundary=under&mode=bulk&lang=en"),
     ).toEqual({
       type: "docx",
       sizeMb: 10,
       boundary: "under",
+      mode: "bulk",
       lang: "en",
     });
   });
@@ -24,12 +25,13 @@ describe("query", () => {
       language: "en-US",
       languages: ["en-US"],
     });
-    expect(paramsFromSearch("?type=mp4&size=99&boundary=nope&lang=fr")).toEqual(
-      {
-        ...DEFAULT_GENERATOR_PARAMS,
-        lang: "en",
-      },
-    );
+    expect(
+      paramsFromSearch("?type=mp4&size=99&boundary=nope&mode=nope&lang=fr"),
+    ).toEqual({
+      ...DEFAULT_GENERATOR_PARAMS,
+      mode: "size",
+      lang: "en",
+    });
   });
 
   it("omitted lang follows browser locale", () => {
@@ -41,6 +43,7 @@ describe("query", () => {
       type: "pdf",
       sizeMb: 5,
       boundary: "over",
+      mode: "size",
       lang: "en",
     });
 
@@ -52,6 +55,7 @@ describe("query", () => {
       type: "json",
       sizeMb: 1,
       boundary: "exact",
+      mode: "size",
       lang: "ja",
     });
   });
@@ -61,15 +65,28 @@ describe("query", () => {
       type: "png" as const,
       sizeMb: 5 as const,
       boundary: "over" as const,
+      mode: "bulk" as const,
       lang: "en" as const,
     };
     expect(paramsFromSearch(searchFromParams(params))).toEqual(params);
   });
 
-  it("toGeneratorParams drops lang", () => {
+  it("omits default mode from search string", () => {
+    const search = searchFromParams({
+      type: "png",
+      sizeMb: 1,
+      boundary: "exact",
+      mode: "size",
+      lang: "ja",
+    });
+    expect(search).not.toContain("mode=");
+  });
+
+  it("toGeneratorParams drops lang and mode", () => {
     expect(
       toGeneratorParams({
         ...DEFAULT_GENERATOR_PARAMS,
+        mode: "bulk",
         lang: "en",
       }),
     ).toEqual(DEFAULT_GENERATOR_PARAMS);

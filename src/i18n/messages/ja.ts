@@ -5,6 +5,11 @@ export const ja = {
     description:
       "指定サイズの画像やオフィスファイルなどのダミーを生成するツール。対応フォーマット PNG, JPEG, DOCX, XLSX, PPTX, PDF, TXT, CSV, JSON",
   },
+  mode: {
+    label: "生成モード",
+    size: "サイズ指定",
+    bulk: "大量生成",
+  },
   form: {
     fileType: "ファイル形式",
     size: "サイズ",
@@ -15,6 +20,21 @@ export const ja = {
     boundaryOver: "+1 バイト",
     preview: "生成内容",
     previewBytes: "バイト",
+  },
+  bulk: {
+    form: {
+      count: "ファイル数",
+      countDescription: "1〜10,000 件まで指定できます",
+      countUnits: "件",
+      fileTypes: "ファイル形式",
+      selectAll: "すべて選択",
+      preview: "生成内容",
+      previewFiles: "ファイル",
+    },
+    actions: {
+      generateComingSoon: "生成してダウンロード（準備中）",
+      comingSoonTooltip: "大量生成はまだ実装されていません",
+    },
   },
   sections: {
     image: "画像",
@@ -47,6 +67,11 @@ export type Messages = {
     title: string;
     description: string;
   };
+  mode: {
+    label: string;
+    size: string;
+    bulk: string;
+  };
   form: {
     fileType: string;
     size: string;
@@ -57,6 +82,21 @@ export type Messages = {
     boundaryOver: string;
     preview: string;
     previewBytes: string;
+  };
+  bulk: {
+    form: {
+      count: string;
+      countDescription: string;
+      countUnits: string;
+      fileTypes: string;
+      selectAll: string;
+      preview: string;
+      previewFiles: string;
+    };
+    actions: {
+      generateComingSoon: string;
+      comingSoonTooltip: string;
+    };
   };
   sections: {
     image: string;

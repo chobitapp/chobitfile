@@ -7,6 +7,8 @@ import { FormLayout } from "@astryxdesign/core/FormLayout";
 import { Heading } from "@astryxdesign/core/Heading";
 import { HStack } from "@astryxdesign/core/HStack";
 import { Link } from "@astryxdesign/core/Link";
+import { MultiSelector } from "@astryxdesign/core/MultiSelector";
+import { NumberInput } from "@astryxdesign/core/NumberInput";
 import { RadioList, RadioListItem } from "@astryxdesign/core/RadioList";
 import {
   SegmentedControl,
@@ -15,7 +17,7 @@ import {
 import { Selector } from "@astryxdesign/core/Selector";
 import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useGenerateFile } from "./hooks/useGenerateFile";
 import { useQueryParams } from "./hooks/useQueryParams";
 import { formatBytes, LocaleProvider, sizeOptionLabel, useT } from "./i18n";
@@ -25,8 +27,13 @@ import { toGeneratorParams } from "./lib/query";
 import { targetBytesFor } from "./lib/sizes";
 import {
   type BoundaryMode,
+  BULK_COUNT_MAX,
+  BULK_COUNT_MIN,
+  DEFAULT_BULK_COUNT,
+  DEFAULT_BULK_TYPES,
   FILE_TYPE_LABELS,
   type FileType,
+  type GenerateMode,
   SIZE_MB_OPTIONS,
   type SizeMb,
 } from "./lib/types";
@@ -52,6 +59,11 @@ function AppInner() {
   const [params, setParams] = useQueryParams();
   const t = useT();
   const { generate, isGenerating, error, clearError } = useGenerateFile();
+
+  const [bulkCount, setBulkCount] = useState(DEFAULT_BULK_COUNT);
+  const [bulkTypes, setBulkTypes] = useState<string[]>(() => [
+    ...DEFAULT_BULK_TYPES,
+  ]);
 
   const target = targetBytesFor(params.sizeMb, params.boundary);
   const filename = buildFilename(params.type, params.sizeMb, params.boundary);
@@ -89,11 +101,22 @@ function AppInner() {
     [t],
   );
 
+  const bulkTypeLabels = useMemo(
+    () =>
+      bulkTypes
+        .filter((value): value is FileType => value in FILE_TYPE_LABELS)
+        .map((value) => FILE_TYPE_LABELS[value])
+        .join(", "),
+    [bulkTypes],
+  );
+
   const cliGenerateExample = `${t.cli.generateComment}
 npx chobitfile -t pdf -s 10mb -o ./10mb.pdf`;
 
   const cliInstallExample = `${t.cli.installComment}
 npm i -g chobitfile`;
+
+  const isSizeMode = params.mode === "size";
 
   return (
     <Center minHeight="100dvh" width="100%">
@@ -115,94 +138,157 @@ npm i -g chobitfile`;
               </SegmentedControl>
             </HStack>
 
-            <FormLayout direction="vertical">
-              <Selector
-                label={t.form.fileType}
-                value={params.type}
-                onChange={(value) =>
-                  setParams({ ...params, type: value as FileType })
-                }
-                options={fileTypeOptions}
-                isDisabled={isGenerating}
-              />
-
-              <RadioList
-                label={t.form.size}
-                value={String(params.sizeMb)}
-                onChange={(value) =>
-                  setParams({
-                    ...params,
-                    sizeMb: Number(value) as SizeMb,
-                  })
-                }
-                isDisabled={isGenerating}
-                description={t.form.sizeDescription}
-              >
-                {SIZE_MB_OPTIONS.map((sizeMb) => (
-                  <RadioListItem
-                    key={sizeMb}
-                    value={String(sizeMb)}
-                    label={sizeOptionLabel(sizeMb, params.lang)}
-                  />
-                ))}
-              </RadioList>
-
-              <SegmentedControl
-                label={t.form.boundary}
-                value={params.boundary}
-                onChange={(value) =>
-                  setParams({
-                    ...params,
-                    boundary: value as BoundaryMode,
-                  })
-                }
-                layout="fill"
-                isDisabled={isGenerating}
-              >
-                <SegmentedControlItem
-                  value="exact"
-                  label={t.form.boundaryExact}
-                />
-                <SegmentedControlItem
-                  value="under"
-                  label={t.form.boundaryUnder}
-                />
-                <SegmentedControlItem
-                  value="over"
-                  label={t.form.boundaryOver}
-                />
-              </SegmentedControl>
-            </FormLayout>
-
-            <VStack gap={1}>
-              <Text type="label" display="block">
-                {t.form.preview}
-              </Text>
-              <Text type="supporting" display="block" hasTabularNumbers>
-                {filename} / {formatBytes(target, params.lang)}{" "}
-                {t.form.previewBytes}
-              </Text>
-            </VStack>
-
-            {error ? (
-              <Banner
-                status="error"
-                title={t.errors.generateFailed}
-                description={error}
-                isDismissable
-                onDismiss={clearError}
-              />
-            ) : null}
-
-            <Button
-              label={isGenerating ? t.actions.generating : t.actions.generate}
-              variant="primary"
-              isLoading={isGenerating}
+            <SegmentedControl
+              label={t.mode.label}
+              value={params.mode}
+              onChange={(value) =>
+                setParams({ ...params, mode: value as GenerateMode })
+              }
+              layout="fill"
               isDisabled={isGenerating}
-              onClick={() => {
-                void generate(toGeneratorParams(params), params.lang);
-              }}
-            />
+            >
+              <SegmentedControlItem value="size" label={t.mode.size} />
+              <SegmentedControlItem value="bulk" label={t.mode.bulk} />
+            </SegmentedControl>
+
+            {isSizeMode ? (
+              <>
+                <FormLayout direction="vertical">
+                  <Selector
+                    label={t.form.fileType}
+                    value={params.type}
+                    onChange={(value) =>
+                      setParams({ ...params, type: value as FileType })
+                    }
+                    options={fileTypeOptions}
+                    isDisabled={isGenerating}
+                  />
+
+                  <RadioList
+                    label={t.form.size}
+                    value={String(params.sizeMb)}
+                    onChange={(value) =>
+                      setParams({
+                        ...params,
+                        sizeMb: Number(value) as SizeMb,
+                      })
+                    }
+                    isDisabled={isGenerating}
+                    description={t.form.sizeDescription}
+                  >
+                    {SIZE_MB_OPTIONS.map((sizeMb) => (
+                      <RadioListItem
+                        key={sizeMb}
+                        value={String(sizeMb)}
+                        label={sizeOptionLabel(sizeMb, params.lang)}
+                      />
+                    ))}
+                  </RadioList>
+
+                  <SegmentedControl
+                    label={t.form.boundary}
+                    value={params.boundary}
+                    onChange={(value) =>
+                      setParams({
+                        ...params,
+                        boundary: value as BoundaryMode,
+                      })
+                    }
+                    layout="fill"
+                    isDisabled={isGenerating}
+                  >
+                    <SegmentedControlItem
+                      value="exact"
+                      label={t.form.boundaryExact}
+                    />
+                    <SegmentedControlItem
+                      value="under"
+                      label={t.form.boundaryUnder}
+                    />
+                    <SegmentedControlItem
+                      value="over"
+                      label={t.form.boundaryOver}
+                    />
+                  </SegmentedControl>
+                </FormLayout>
+
+                <VStack gap={1}>
+                  <Text type="label" display="block">
+                    {t.form.preview}
+                  </Text>
+                  <Text type="supporting" display="block" hasTabularNumbers>
+                    {filename} / {formatBytes(target, params.lang)}{" "}
+                    {t.form.previewBytes}
+                  </Text>
+                </VStack>
+
+                {error ? (
+                  <Banner
+                    status="error"
+                    title={t.errors.generateFailed}
+                    description={error}
+                    isDismissable
+                    onDismiss={clearError}
+                  />
+                ) : null}
+
+                <Button
+                  label={
+                    isGenerating ? t.actions.generating : t.actions.generate
+                  }
+                  variant="primary"
+                  isLoading={isGenerating}
+                  isDisabled={isGenerating}
+                  onClick={() => {
+                    void generate(toGeneratorParams(params), params.lang);
+                  }}
+                />
+              </>
+            ) : (
+              <>
+                <FormLayout direction="vertical">
+                  <NumberInput
+                    label={t.bulk.form.count}
+                    description={t.bulk.form.countDescription}
+                    value={bulkCount}
+                    onChange={setBulkCount}
+                    min={BULK_COUNT_MIN}
+                    max={BULK_COUNT_MAX}
+                    step={1}
+                    isIntegerOnly
+                    units={t.bulk.form.countUnits}
+                  />
+
+                  <MultiSelector
+                    label={t.bulk.form.fileTypes}
+                    value={bulkTypes}
+                    onChange={setBulkTypes}
+                    options={fileTypeOptions}
+                    hasSelectAll
+                    selectAllLabel={t.bulk.form.selectAll}
+                    triggerDisplay="labels"
+                  />
+                </FormLayout>
+
+                <VStack gap={1}>
+                  <Text type="label" display="block">
+                    {t.bulk.form.preview}
+                  </Text>
+                  <Text type="supporting" display="block" hasTabularNumbers>
+                    {bulkCount.toLocaleString(params.lang)}{" "}
+                    {t.bulk.form.previewFiles}
+                    {bulkTypeLabels ? ` / ${bulkTypeLabels}` : ""}
+                  </Text>
+                </VStack>
+
+                <Button
+                  label={t.bulk.actions.generateComingSoon}
+                  variant="primary"
+                  isDisabled
+                  tooltip={t.bulk.actions.comingSoonTooltip}
+                />
+              </>
+            )}
           </VStack>
         </Card>
 
