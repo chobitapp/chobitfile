@@ -56,5 +56,8 @@
     "vite": "^8.1.5",
     "vitest": "^4.1.10",
     "wrangler": "^4.112.0"
+  },
+  "dependencies": {
+    "unique-names-generator": "^4.7.1"
   }
 }

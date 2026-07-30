@@ -34,10 +34,21 @@ export const en: Messages = {
       directories: "Place in directories",
       directoriesDescription:
         "When enabled, files are randomly placed in directories up to 2 levels deep",
+      nameMode: "File names",
+      nameModeSequential: "Sequential",
+      nameModeRandom: "Random",
+      nameLocale: "Random name language",
+      nameLocaleEn: "English",
+      nameLocaleJa: "Japanese",
+      nameModeDescription:
+        "Sequential uses chobitfile-0001. Random combines English or Japanese words",
       preview: "Output",
       previewFiles: "files",
       previewZip: "ZIP",
       previewWithDirs: "with directories",
+      previewNameSequential: "sequential names",
+      previewNameRandomEn: "random (English)",
+      previewNameRandomJa: "random (Japanese)",
       typesRequired: "Select at least one file type",
     },
     actions: {

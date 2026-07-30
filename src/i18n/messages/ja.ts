@@ -32,10 +32,21 @@ export const ja = {
       directories: "ディレクトリに配置",
       directoriesDescription:
         "有効にすると、最大2階層までのディレクトリにファイルをランダム配置します",
+      nameMode: "ファイル名",
+      nameModeSequential: "連番",
+      nameModeRandom: "ランダム",
+      nameLocale: "ランダム名の言語",
+      nameLocaleEn: "英語",
+      nameLocaleJa: "日本語",
+      nameModeDescription:
+        "連番は chobitfile-0001 形式。ランダムは英単語または日本語の単語組み合わせ",
       preview: "生成内容",
       previewFiles: "ファイル",
       previewZip: "ZIP",
       previewWithDirs: "ディレクトリあり",
+      previewNameSequential: "連番",
+      previewNameRandomEn: "ランダム（英語）",
+      previewNameRandomJa: "ランダム（日本語）",
       typesRequired: "形式を1つ以上選んでください",
     },
     actions: {
@@ -99,10 +110,20 @@ export type Messages = {
       selectAll: string;
       directories: string;
       directoriesDescription: string;
+      nameMode: string;
+      nameModeSequential: string;
+      nameModeRandom: string;
+      nameLocale: string;
+      nameLocaleEn: string;
+      nameLocaleJa: string;
+      nameModeDescription: string;
       preview: string;
       previewFiles: string;
       previewZip: string;
       previewWithDirs: string;
+      previewNameSequential: string;
+      previewNameRandomEn: string;
+      previewNameRandomJa: string;
       typesRequired: string;
     };
     actions: {

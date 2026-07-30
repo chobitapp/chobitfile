@@ -120,6 +120,37 @@ describe("planBulkFiles", () => {
     expect(plans[1].name).toBe("dir-2/dir-7/chobitfile-2.txt");
     expect(plans[2].name).toBe("dir-5/chobitfile-3.txt");
   });
+
+  it("nameMode random en は英単語ファイル名", () => {
+    const plans = planBulkFiles({
+      count: 5,
+      types: ["txt"],
+      nameMode: "random",
+      nameLocale: "en",
+      random: makeSequenceRandom([
+        0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.1, 0.2, 0.3, 0.4,
+      ]),
+    });
+    const basenames = plans.map((p) => p.name);
+    expect(new Set(basenames).size).toBe(5);
+    for (const name of basenames) {
+      expect(name).toMatch(/^[a-z0-9]+-[a-z0-9]+\.txt$/);
+    }
+  });
+
+  it("nameMode random ja は日本語ファイル名", () => {
+    const plans = planBulkFiles({
+      count: 4,
+      types: ["png"],
+      nameMode: "random",
+      nameLocale: "ja",
+      random: makeSequenceRandom([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]),
+    });
+    for (const plan of plans) {
+      expect(plan.name).toMatch(/^[\u3040-\u309f]+-[\u3040-\u309f]+\.png$/);
+    }
+    expect(new Set(plans.map((p) => p.name)).size).toBe(4);
+  });
 });
 
 describe("randomDirPrefix", () => {
@@ -170,6 +201,22 @@ describe("generateBulkZip", () => {
       const depth = name.split("/").length - 1;
       expect(depth).toBeLessThanOrEqual(BULK_DIR_MAX_DEPTH);
     }
+  });
+
+  it("日本語ランダム名の ZIP は UTF-8 フラグ付き", async () => {
+    const zip = await generateBulkZip({
+      count: 1,
+      types: ["txt"],
+      nameMode: "random",
+      nameLocale: "ja",
+      random: makeSequenceRandom([0.0, 0.0]),
+    });
+    const view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength);
+    const flags = view.getUint16(6, true);
+    expect(flags & 0x0800).toBe(0x0800);
+    const names = zipEntryNames(zip);
+    expect(names[0]).toMatch(/\.txt$/);
+    expect(/[\u3040-\u309f]/.test(names[0])).toBe(true);
   });
 
   it("各形式の bulk 目標サイズでサンプル生成できる", async () => {

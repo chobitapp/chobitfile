@@ -2,9 +2,14 @@ import {
   BULK_COUNT_MAX,
   BULK_COUNT_MIN,
   BULK_DIR_MAX_DEPTH,
+  type BulkNameLocale,
+  type BulkNameMode,
+  DEFAULT_BULK_NAME_LOCALE,
+  DEFAULT_BULK_NAME_MODE,
   FILE_TYPES,
   type FileType,
 } from "../lib/types";
+import { buildBulkBaseName } from "./bulk-filename";
 import { generateFile } from "./generate-file";
 import { buildStoreZip, type ZipEntry } from "./zip";
 
@@ -32,6 +37,10 @@ export type BulkGenerateParams = {
    * ディレクトリにランダム配置する。デフォルト false（ルート直下にフラット配置）。
    */
   directories?: boolean;
+  /** ファイル名モード。デフォルト sequential */
+  nameMode?: BulkNameMode;
+  /** nameMode が random のときの語彙。デフォルト en */
+  nameLocale?: BulkNameLocale;
   /** [0, 1) を返す乱数。未指定時は Math.random。テスト注入用。 */
   random?: () => number;
 };
@@ -89,7 +98,14 @@ export function randomDirPrefix(
 
 /** 件数・形式の組み合わせをエントリ計画に展開する（ラウンドロビン） */
 export function planBulkFiles(params: BulkGenerateParams): BulkFilePlan[] {
-  const { count, types, directories = false, random = Math.random } = params;
+  const {
+    count,
+    types,
+    directories = false,
+    nameMode = DEFAULT_BULK_NAME_MODE,
+    nameLocale = DEFAULT_BULK_NAME_LOCALE,
+    random = Math.random,
+  } = params;
 
   if (
     !Number.isInteger(count) ||
@@ -117,20 +133,29 @@ export function planBulkFiles(params: BulkGenerateParams): BulkFilePlan[] {
     }
   }
 
-  const width = String(count).length;
+  const sequentialWidth = String(count).length;
   const dirPool = directories ? buildDirNamePool(count) : [];
+  const usedBaseNames = new Set<string>();
   const plans: BulkFilePlan[] = [];
   for (let i = 0; i < count; i++) {
     const type = uniqueTypes[i % uniqueTypes.length];
     const index = i + 1;
-    const baseName = `chobitfile-${String(index).padStart(width, "0")}.${type}`;
+    const baseName = buildBulkBaseName({
+      mode: nameMode,
+      locale: nameLocale,
+      sequentialWidth,
+      index,
+      usedBaseNames,
+      random,
+    });
+    const fileName = `${baseName}.${type}`;
     const prefix = directories
       ? randomDirPrefix(dirPool, BULK_DIR_MAX_DEPTH, random)
       : "";
     plans.push({
       index,
       type,
-      name: `${prefix}${baseName}`,
+      name: `${prefix}${fileName}`,
       targetBytes: BULK_TARGET_BYTES[type],
     });
   }

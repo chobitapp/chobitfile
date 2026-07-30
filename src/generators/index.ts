@@ -4,7 +4,13 @@ export {
   type BulkGenerateParams,
   generateBulkZip,
   planBulkFiles,
+  randomDirPrefix,
 } from "./bulk";
+export {
+  type BulkFilenameOptions,
+  buildBulkBaseName,
+  sampleRandomSlug,
+} from "./bulk-filename";
 export { generateCsv } from "./csv";
 export { generateDocx } from "./docx";
 export {
@@ -12,6 +18,7 @@ export {
   generateFile,
 } from "./generate-file";
 export { type ImageLabel, imageLabelFromParams } from "./image-label";
+export { JA_ADJECTIVES, JA_NOUNS } from "./ja-words";
 export {
   buildMinimalJpeg,
   findEoiOffset,

@@ -124,6 +124,8 @@ describe("parseBulkGenerateRequest", () => {
       types: ["png", "pdf"],
       filename: "chobitfile-bulk-100.zip",
       directories: false,
+      nameMode: "sequential",
+      nameLocale: "en",
     });
   });
 
@@ -139,7 +141,42 @@ describe("parseBulkGenerateRequest", () => {
       types: ["png", "pdf"],
       filename: "chobitfile-bulk-100.zip",
       directories: true,
+      nameMode: "sequential",
+      nameLocale: "en",
     });
+  });
+
+  it("accepts nameMode and nameLocale", () => {
+    expect(
+      parseBulkGenerateRequest({
+        ...validBulk,
+        nameMode: "random",
+        nameLocale: "ja",
+      }),
+    ).toEqual({
+      mode: "bulk",
+      count: 100,
+      types: ["png", "pdf"],
+      filename: "chobitfile-bulk-100.zip",
+      directories: false,
+      nameMode: "random",
+      nameLocale: "ja",
+    });
+  });
+
+  it("rejects invalid nameMode / nameLocale", () => {
+    expect(() =>
+      parseBulkGenerateRequest({
+        ...validBulk,
+        nameMode: "uuid",
+      }),
+    ).toThrow(/Invalid bulk nameMode/);
+    expect(() =>
+      parseBulkGenerateRequest({
+        ...validBulk,
+        nameLocale: "fr",
+      }),
+    ).toThrow(/Invalid bulk nameLocale/);
   });
 
   it("rejects non-boolean directories", () => {
@@ -163,6 +200,8 @@ describe("parseBulkGenerateRequest", () => {
       types: ["png", "txt"],
       filename: "chobitfile-bulk-100.zip",
       directories: false,
+      nameMode: "sequential",
+      nameLocale: "en",
     });
   });
 

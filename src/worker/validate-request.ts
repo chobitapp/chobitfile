@@ -7,6 +7,12 @@ import {
   type BoundaryMode,
   BULK_COUNT_MAX,
   BULK_COUNT_MIN,
+  BULK_NAME_LOCALES,
+  BULK_NAME_MODES,
+  type BulkNameLocale,
+  type BulkNameMode,
+  DEFAULT_BULK_NAME_LOCALE,
+  DEFAULT_BULK_NAME_MODE,
   FILE_TYPES,
   type FileType,
   SIZE_MB_OPTIONS,
@@ -29,6 +35,10 @@ export type BulkGenerateRequest = {
   filename: string;
   /** 最大2階層までのディレクトリにランダム配置（省略時 false） */
   directories?: boolean;
+  /** ファイル名モード（省略時 sequential） */
+  nameMode?: BulkNameMode;
+  /** ランダム名の語彙ロケール（省略時 en） */
+  nameLocale?: BulkNameLocale;
 };
 
 export type WorkerRequest = GenerateRequest | BulkGenerateRequest;
@@ -163,7 +173,7 @@ export function parseBulkGenerateRequest(data: unknown): BulkGenerateRequest {
     throw new Error("Expected bulk generate request");
   }
 
-  const { count, types, filename, directories } = data;
+  const { count, types, filename, directories, nameMode, nameLocale } = data;
 
   if (
     typeof count !== "number" ||
@@ -186,12 +196,36 @@ export function parseBulkGenerateRequest(data: unknown): BulkGenerateRequest {
     throw new Error(`Invalid bulk directories: ${String(directories)}`);
   }
 
+  let resolvedNameMode: BulkNameMode = DEFAULT_BULK_NAME_MODE;
+  if (nameMode !== undefined) {
+    if (
+      typeof nameMode !== "string" ||
+      !(BULK_NAME_MODES as readonly string[]).includes(nameMode)
+    ) {
+      throw new Error(`Invalid bulk nameMode: ${String(nameMode)}`);
+    }
+    resolvedNameMode = nameMode as BulkNameMode;
+  }
+
+  let resolvedNameLocale: BulkNameLocale = DEFAULT_BULK_NAME_LOCALE;
+  if (nameLocale !== undefined) {
+    if (
+      typeof nameLocale !== "string" ||
+      !(BULK_NAME_LOCALES as readonly string[]).includes(nameLocale)
+    ) {
+      throw new Error(`Invalid bulk nameLocale: ${String(nameLocale)}`);
+    }
+    resolvedNameLocale = nameLocale as BulkNameLocale;
+  }
+
   return {
     mode: "bulk",
     count,
     types: parsedTypes,
     filename,
     directories: directories === true,
+    nameMode: resolvedNameMode,
+    nameLocale: resolvedNameLocale,
   };
 }
 

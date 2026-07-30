@@ -4,7 +4,12 @@ import type { Locale } from "../i18n/locales";
 import { downloadBlob } from "../lib/download";
 import { buildBulkZipFilename, buildFilename } from "../lib/filename";
 import { targetBytesFor } from "../lib/sizes";
-import type { FileType, GeneratorParams } from "../lib/types";
+import type {
+  BulkNameLocale,
+  BulkNameMode,
+  FileType,
+  GeneratorParams,
+} from "../lib/types";
 import type {
   BulkGenerateRequest,
   GenerateRequest,
@@ -18,6 +23,8 @@ export type BulkGenerateParams = {
   types: readonly FileType[];
   /** 最大2階層までのディレクトリにランダム配置（デフォルト false） */
   directories?: boolean;
+  nameMode?: BulkNameMode;
+  nameLocale?: BulkNameLocale;
 };
 
 export function useGenerateFile() {
@@ -119,6 +126,8 @@ export function useGenerateFile() {
         types: [...params.types],
         filename: buildBulkZipFilename(params.count),
         directories: params.directories === true,
+        nameMode: params.nameMode,
+        nameLocale: params.nameLocale,
       };
 
       try {

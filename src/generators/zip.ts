@@ -6,9 +6,20 @@ export type ZipEntry = {
   data: Uint8Array;
 };
 
+/** general purpose bit 11: Language encoding flag (UTF-8) */
+const ZIP_FLAG_UTF8 = 0x0800;
+
+function isNonAscii(nameBytes: Uint8Array): boolean {
+  for (let i = 0; i < nameBytes.byteLength; i++) {
+    if (nameBytes[i] > 0x7f) return true;
+  }
+  return false;
+}
+
 /**
  * store（無圧縮）ZIP を組み立てる。
  * DOCX など Office Open XML パッケージ向け。
+ * 非 ASCII ファイル名には UTF-8 フラグを立てる。
  */
 export function buildStoreZip(entries: ZipEntry[]): Uint8Array {
   if (entries.length === 0) {
@@ -25,6 +36,7 @@ export function buildStoreZip(entries: ZipEntry[]): Uint8Array {
       data: entry.data,
       crc: crc32(entry.data),
       size: entry.data.byteLength,
+      flags: isNonAscii(nameBytes) ? ZIP_FLAG_UTF8 : 0,
     };
   });
 
@@ -48,7 +60,7 @@ export function buildStoreZip(entries: ZipEntry[]): Uint8Array {
     offset += 4;
     writeU16LE(view, offset, 20);
     offset += 2;
-    writeU16LE(view, offset, 0);
+    writeU16LE(view, offset, item.flags);
     offset += 2;
     writeU16LE(view, offset, 0); // store
     offset += 2;
@@ -82,7 +94,7 @@ export function buildStoreZip(entries: ZipEntry[]): Uint8Array {
     offset += 2;
     writeU16LE(view, offset, 20);
     offset += 2;
-    writeU16LE(view, offset, 0);
+    writeU16LE(view, offset, item.flags);
     offset += 2;
     writeU16LE(view, offset, 0);
     offset += 2;

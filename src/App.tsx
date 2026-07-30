@@ -30,8 +30,12 @@ import {
   type BoundaryMode,
   BULK_COUNT_MAX,
   BULK_COUNT_MIN,
+  type BulkNameLocale,
+  type BulkNameMode,
   DEFAULT_BULK_COUNT,
   DEFAULT_BULK_DIRECTORIES,
+  DEFAULT_BULK_NAME_LOCALE,
+  DEFAULT_BULK_NAME_MODE,
   DEFAULT_BULK_TYPES,
   FILE_TYPE_LABELS,
   FILE_TYPES,
@@ -70,6 +74,12 @@ function AppInner() {
   ]);
   const [bulkDirectories, setBulkDirectories] = useState(
     DEFAULT_BULK_DIRECTORIES,
+  );
+  const [bulkNameMode, setBulkNameMode] = useState<BulkNameMode>(
+    DEFAULT_BULK_NAME_MODE,
+  );
+  const [bulkNameLocale, setBulkNameLocale] = useState<BulkNameLocale>(
+    DEFAULT_BULK_NAME_LOCALE,
   );
 
   const target = targetBytesFor(params.sizeMb, params.boundary);
@@ -121,6 +131,12 @@ function AppInner() {
     [selectedBulkTypes],
   );
   const bulkZipFilename = buildBulkZipFilename(bulkCount);
+  const bulkNamePreviewLabel =
+    bulkNameMode === "sequential"
+      ? t.bulk.form.previewNameSequential
+      : bulkNameLocale === "ja"
+        ? t.bulk.form.previewNameRandomJa
+        : t.bulk.form.previewNameRandomEn;
 
   const cliGenerateExample = `${t.cli.generateComment}
 npx chobitfile -t pdf -s 10mb -o ./10mb.pdf`;
@@ -303,6 +319,44 @@ npm i -g chobitfile`;
                     }
                   />
 
+                  <SegmentedControl
+                    label={t.bulk.form.nameMode}
+                    value={bulkNameMode}
+                    onChange={(value) => setBulkNameMode(value as BulkNameMode)}
+                    layout="fill"
+                    isDisabled={isGenerating}
+                  >
+                    <SegmentedControlItem
+                      value="sequential"
+                      label={t.bulk.form.nameModeSequential}
+                    />
+                    <SegmentedControlItem
+                      value="random"
+                      label={t.bulk.form.nameModeRandom}
+                    />
+                  </SegmentedControl>
+
+                  {bulkNameMode === "random" ? (
+                    <SegmentedControl
+                      label={t.bulk.form.nameLocale}
+                      value={bulkNameLocale}
+                      onChange={(value) =>
+                        setBulkNameLocale(value as BulkNameLocale)
+                      }
+                      layout="fill"
+                      isDisabled={isGenerating}
+                    >
+                      <SegmentedControlItem
+                        value="en"
+                        label={t.bulk.form.nameLocaleEn}
+                      />
+                      <SegmentedControlItem
+                        value="ja"
+                        label={t.bulk.form.nameLocaleJa}
+                      />
+                    </SegmentedControl>
+                  ) : null}
+
                   <Switch
                     label={t.bulk.form.directories}
                     description={t.bulk.form.directoriesDescription}
@@ -321,6 +375,7 @@ npm i -g chobitfile`;
                     {bulkZipFilename} / {bulkCount.toLocaleString(params.lang)}{" "}
                     {t.bulk.form.previewFiles}
                     {bulkTypeLabels ? ` / ${bulkTypeLabels}` : ""}
+                    {` / ${bulkNamePreviewLabel}`}
                     {bulkDirectories ? ` / ${t.bulk.form.previewWithDirs}` : ""}
                   </Text>
                 </VStack>
@@ -349,6 +404,8 @@ npm i -g chobitfile`;
                       count: bulkCount,
                       types: selectedBulkTypes,
                       directories: bulkDirectories,
+                      nameMode: bulkNameMode,
+                      nameLocale: bulkNameLocale,
                     });
                   }}
                 />

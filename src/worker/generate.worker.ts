@@ -59,6 +59,8 @@ async function handleBulk(
     count: request.count,
     types: request.types,
     directories: request.directories === true,
+    nameMode: request.nameMode,
+    nameLocale: request.nameLocale,
   });
   const buffer = toTransferableBuffer(bytes);
   return {

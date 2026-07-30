@@ -67,11 +67,21 @@ export const DEFAULT_GENERATOR_PARAMS: GeneratorParams = {
   boundary: "exact",
 };
 
+/** 大量生成のファイル名モード */
+export const BULK_NAME_MODES = ["sequential", "random"] as const;
+export type BulkNameMode = (typeof BULK_NAME_MODES)[number];
+
+/** ランダムファイル名の語彙ロケール（人名ではなく単語組み合わせ） */
+export const BULK_NAME_LOCALES = ["en", "ja"] as const;
+export type BulkNameLocale = (typeof BULK_NAME_LOCALES)[number];
+
 /** 大量生成 UI 用デフォルト（URL 同期対象外・ローカル state） */
 export const DEFAULT_BULK_COUNT = 1000;
 export const DEFAULT_BULK_TYPES: readonly FileType[] = FILE_TYPES;
 /** ディレクトリ配置のデフォルト（オフ） */
 export const DEFAULT_BULK_DIRECTORIES = false;
+export const DEFAULT_BULK_NAME_MODE: BulkNameMode = "sequential";
+export const DEFAULT_BULK_NAME_LOCALE: BulkNameLocale = "en";
 export const BULK_COUNT_MIN = 1;
 export const BULK_COUNT_MAX = 10_000;
 /** ディレクトリ配置時の最大階層（ルート直下を 0 とする） */
