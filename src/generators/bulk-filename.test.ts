@@ -39,7 +39,7 @@ describe("buildBulkBaseName", () => {
     expect(used.has(base)).toBe(true);
   });
 
-  it("random ja はひらがなの単語組み合わせ", () => {
+  it("random ja は漢字中心の単語組み合わせ", () => {
     const used = new Set<string>();
     const base = buildBulkBaseName({
       mode: "random",
@@ -49,7 +49,11 @@ describe("buildBulkBaseName", () => {
       usedBaseNames: used,
       random: makeSequenceRandom([0.0, 0.0]),
     });
-    expect(base).toMatch(/^[\u3040-\u309f]+-[\u3040-\u309f]+$/);
+    // 漢字（＋送りがなのひらがな）を含む 語-語 形式
+    expect(base).toMatch(
+      /^[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]+-[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]+$/,
+    );
+    expect(base).toMatch(/[\u4e00-\u9fff]/);
   });
 
   it("衝突時は再試行して別名を返す", () => {
@@ -74,6 +78,9 @@ describe("sampleRandomSlug", () => {
     const en = sampleRandomSlug("en", makeSequenceRandom([0.1, 0.2]));
     const ja = sampleRandomSlug("ja", makeSequenceRandom([0.1, 0.2]));
     expect(en).toMatch(/^[a-z0-9]+-[a-z0-9]+$/);
-    expect(ja).toMatch(/^[\u3040-\u309f]+-[\u3040-\u309f]+$/);
+    expect(ja).toMatch(
+      /^[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]+-[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]+$/,
+    );
+    expect(ja).toMatch(/[\u4e00-\u9fff]/);
   });
 });

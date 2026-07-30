@@ -138,7 +138,7 @@ describe("planBulkFiles", () => {
     }
   });
 
-  it("nameMode random ja は日本語ファイル名", () => {
+  it("nameMode random ja は漢字中心の日本語ファイル名", () => {
     const plans = planBulkFiles({
       count: 4,
       types: ["png"],
@@ -147,7 +147,10 @@ describe("planBulkFiles", () => {
       random: makeSequenceRandom([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]),
     });
     for (const plan of plans) {
-      expect(plan.name).toMatch(/^[\u3040-\u309f]+-[\u3040-\u309f]+\.png$/);
+      expect(plan.name).toMatch(
+        /^[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]+-[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]+\.png$/,
+      );
+      expect(plan.name).toMatch(/[\u4e00-\u9fff]/);
     }
     expect(new Set(plans.map((p) => p.name)).size).toBe(4);
   });
@@ -216,7 +219,7 @@ describe("generateBulkZip", () => {
     expect(flags & 0x0800).toBe(0x0800);
     const names = zipEntryNames(zip);
     expect(names[0]).toMatch(/\.txt$/);
-    expect(/[\u3040-\u309f]/.test(names[0])).toBe(true);
+    expect(/[\u4e00-\u9fff]/.test(names[0])).toBe(true);
   });
 
   it("各形式の bulk 目標サイズでサンプル生成できる", async () => {
