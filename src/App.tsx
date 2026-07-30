@@ -131,7 +131,19 @@ npm i -g chobitfile`;
         <Card maxWidth={480} width="100%" padding={5}>
           <VStack gap={4}>
             <HStack gap={3} hAlign="between" vAlign="center">
-              <Heading level={1}>chobitfile</Heading>
+              <Heading level={1} className="brand-logo">
+                <img
+                  src="/favicon.png"
+                  alt=""
+                  width={28}
+                  height={28}
+                  className="brand-logo__icon"
+                />
+                <span className="brand-logo__wordmark">
+                  <span className="brand-logo__chobit">chobit</span>
+                  <span className="brand-logo__file">file</span>
+                </span>
+              </Heading>
               <SegmentedControl
                 label={t.lang.label}
                 value={params.lang}
