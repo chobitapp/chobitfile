@@ -24,16 +24,19 @@ export const ja = {
   bulk: {
     form: {
       count: "ファイル数",
-      countDescription: "1〜10,000 件まで指定できます",
+      countDescription:
+        "1〜10,000 件まで指定できます。ZIP にまとめてダウンロードします",
       countUnits: "件",
       fileTypes: "ファイル形式",
       selectAll: "すべて選択",
       preview: "生成内容",
       previewFiles: "ファイル",
+      previewZip: "ZIP",
+      typesRequired: "形式を1つ以上選んでください",
     },
     actions: {
-      generateComingSoon: "生成してダウンロード（準備中）",
-      comingSoonTooltip: "大量生成はまだ実装されていません",
+      generate: "ZIP を生成してダウンロード",
+      generating: "生成中…",
     },
   },
   sections: {
@@ -92,10 +95,12 @@ export type Messages = {
       selectAll: string;
       preview: string;
       previewFiles: string;
+      previewZip: string;
+      typesRequired: string;
     };
     actions: {
-      generateComingSoon: string;
-      comingSoonTooltip: string;
+      generate: string;
+      generating: string;
     };
   };
   sections: {

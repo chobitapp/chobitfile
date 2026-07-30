@@ -1,10 +1,12 @@
 import type { ImageLabel } from "../generators";
 import { isLocale, type Locale } from "../i18n/locales";
-import { isValidFilename } from "../lib/filename";
+import { isValidBulkZipFilename, isValidFilename } from "../lib/filename";
 import { MAX_TARGET_BYTES } from "../lib/sizes";
 import {
   BOUNDARY_MODES,
   type BoundaryMode,
+  BULK_COUNT_MAX,
+  BULK_COUNT_MIN,
   FILE_TYPES,
   type FileType,
   SIZE_MB_OPTIONS,
@@ -12,12 +14,22 @@ import {
 } from "../lib/types";
 
 export type GenerateRequest = {
+  mode?: "single";
   type: FileType;
   targetBytes: number;
   filename: string;
   /** Label drawn into PNG / JPEG previews */
   imageLabel?: ImageLabel;
 };
+
+export type BulkGenerateRequest = {
+  mode: "bulk";
+  count: number;
+  types: FileType[];
+  filename: string;
+};
+
+export type WorkerRequest = GenerateRequest | BulkGenerateRequest;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -75,13 +87,35 @@ function parseImageLabel(value: unknown): ImageLabel | undefined {
   return { sizeMb, boundary, targetBytes, locale: resolvedLocale };
 }
 
+function parseBulkTypes(value: unknown): FileType[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new Error("Bulk types must be a non-empty array");
+  }
+  const types: FileType[] = [];
+  const seen = new Set<FileType>();
+  for (const item of value) {
+    if (!isFileType(item)) {
+      throw new Error(`Invalid bulk type: ${String(item)}`);
+    }
+    if (!seen.has(item)) {
+      seen.add(item);
+      types.push(item);
+    }
+  }
+  return types;
+}
+
 /**
- * Validate Worker postMessage payload.
+ * Validate Worker postMessage payload for single-file generation.
  * Rejects bad type / oversized targetBytes / unexpected filename.
  */
 export function parseGenerateRequest(data: unknown): GenerateRequest {
   if (!isRecord(data)) {
     throw new Error("Request must be an object");
+  }
+
+  if (data.mode === "bulk") {
+    throw new Error("Expected single generate request");
   }
 
   const { type, targetBytes, filename, imageLabel } = data;
@@ -111,9 +145,56 @@ export function parseGenerateRequest(data: unknown): GenerateRequest {
   }
 
   return {
+    mode: "single",
     type,
     targetBytes,
     filename,
     imageLabel: parsedLabel,
   };
+}
+
+export function parseBulkGenerateRequest(data: unknown): BulkGenerateRequest {
+  if (!isRecord(data)) {
+    throw new Error("Request must be an object");
+  }
+  if (data.mode !== "bulk") {
+    throw new Error("Expected bulk generate request");
+  }
+
+  const { count, types, filename } = data;
+
+  if (
+    typeof count !== "number" ||
+    !Number.isInteger(count) ||
+    count < BULK_COUNT_MIN ||
+    count > BULK_COUNT_MAX
+  ) {
+    throw new Error(
+      `Invalid bulk count: ${String(count)} (integer ${BULK_COUNT_MIN}..${BULK_COUNT_MAX})`,
+    );
+  }
+
+  const parsedTypes = parseBulkTypes(types);
+
+  if (typeof filename !== "string" || !isValidBulkZipFilename(filename)) {
+    throw new Error(`Invalid bulk filename: ${String(filename)}`);
+  }
+
+  return {
+    mode: "bulk",
+    count,
+    types: parsedTypes,
+    filename,
+  };
+}
+
+/** Single / bulk を判別して検証する */
+export function parseWorkerRequest(data: unknown): WorkerRequest {
+  if (!isRecord(data)) {
+    throw new Error("Request must be an object");
+  }
+  if (data.mode === "bulk") {
+    return parseBulkGenerateRequest(data);
+  }
+  return parseGenerateRequest(data);
 }

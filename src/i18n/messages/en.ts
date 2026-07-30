@@ -26,16 +26,19 @@ export const en: Messages = {
   bulk: {
     form: {
       count: "Number of files",
-      countDescription: "Choose from 1 to 10,000 files",
+      countDescription:
+        "Choose from 1 to 10,000 files. Downloads as a single ZIP",
       countUnits: "files",
       fileTypes: "File types",
       selectAll: "Select all",
       preview: "Output",
       previewFiles: "files",
+      previewZip: "ZIP",
+      typesRequired: "Select at least one file type",
     },
     actions: {
-      generateComingSoon: "Generate and download (coming soon)",
-      comingSoonTooltip: "Bulk generation is not implemented yet",
+      generate: "Generate ZIP and download",
+      generating: "Generating…",
     },
   },
   sections: {

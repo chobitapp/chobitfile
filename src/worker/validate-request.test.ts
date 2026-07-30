@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { MAX_TARGET_BYTES } from "../lib/sizes";
-import { parseGenerateRequest } from "./validate-request";
+import {
+  parseBulkGenerateRequest,
+  parseGenerateRequest,
+  parseWorkerRequest,
+} from "./validate-request";
 
 const validBase = {
   type: "png",
@@ -10,7 +14,10 @@ const validBase = {
 
 describe("parseGenerateRequest", () => {
   it("accepts a valid request", () => {
-    expect(parseGenerateRequest(validBase)).toEqual(validBase);
+    expect(parseGenerateRequest(validBase)).toEqual({
+      ...validBase,
+      mode: "single",
+    });
   });
 
   it("accepts PNG with imageLabel and defaults locale to ja", () => {
@@ -24,6 +31,7 @@ describe("parseGenerateRequest", () => {
     };
     expect(parseGenerateRequest(req)).toEqual({
       ...req,
+      mode: "single",
       imageLabel: { ...req.imageLabel, locale: "ja" },
     });
   });
@@ -38,7 +46,10 @@ describe("parseGenerateRequest", () => {
         locale: "en" as const,
       },
     };
-    expect(parseGenerateRequest(req)).toEqual(req);
+    expect(parseGenerateRequest(req)).toEqual({
+      ...req,
+      mode: "single",
+    });
   });
 
   it("rejects invalid type", () => {
@@ -95,5 +106,75 @@ describe("parseGenerateRequest", () => {
         },
       }),
     ).toThrow(/imageLabel/);
+  });
+});
+
+describe("parseBulkGenerateRequest", () => {
+  const validBulk = {
+    mode: "bulk" as const,
+    count: 100,
+    types: ["png", "pdf"] as const,
+    filename: "chobitfile-bulk-100.zip",
+  };
+
+  it("accepts a valid bulk request", () => {
+    expect(parseBulkGenerateRequest(validBulk)).toEqual({
+      mode: "bulk",
+      count: 100,
+      types: ["png", "pdf"],
+      filename: "chobitfile-bulk-100.zip",
+    });
+  });
+
+  it("dedupes types", () => {
+    expect(
+      parseBulkGenerateRequest({
+        ...validBulk,
+        types: ["png", "png", "txt"],
+      }),
+    ).toEqual({
+      mode: "bulk",
+      count: 100,
+      types: ["png", "txt"],
+      filename: "chobitfile-bulk-100.zip",
+    });
+  });
+
+  it("rejects empty types", () => {
+    expect(() => parseBulkGenerateRequest({ ...validBulk, types: [] })).toThrow(
+      /non-empty/,
+    );
+  });
+
+  it("rejects invalid count", () => {
+    expect(() => parseBulkGenerateRequest({ ...validBulk, count: 0 })).toThrow(
+      /Invalid bulk count/,
+    );
+    expect(() =>
+      parseBulkGenerateRequest({ ...validBulk, count: 10001 }),
+    ).toThrow(/Invalid bulk count/);
+  });
+
+  it("rejects bad zip filename", () => {
+    expect(() =>
+      parseBulkGenerateRequest({
+        ...validBulk,
+        filename: "evil.zip",
+      }),
+    ).toThrow(/Invalid bulk filename/);
+  });
+});
+
+describe("parseWorkerRequest", () => {
+  it("routes bulk and single", () => {
+    expect(
+      parseWorkerRequest({
+        mode: "bulk",
+        count: 2,
+        types: ["txt"],
+        filename: "chobitfile-bulk-2.zip",
+      }).mode,
+    ).toBe("bulk");
+    expect(parseWorkerRequest(validBase).mode).toBe("single");
   });
 });

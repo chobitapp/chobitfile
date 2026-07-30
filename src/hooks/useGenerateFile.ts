@@ -2,15 +2,21 @@ import { useCallback, useRef, useState } from "react";
 import { imageLabelFromParams } from "../generators";
 import type { Locale } from "../i18n/locales";
 import { downloadBlob } from "../lib/download";
-import { buildFilename } from "../lib/filename";
+import { buildBulkZipFilename, buildFilename } from "../lib/filename";
 import { targetBytesFor } from "../lib/sizes";
-import type { GeneratorParams } from "../lib/types";
+import type { FileType, GeneratorParams } from "../lib/types";
 import type {
+  BulkGenerateRequest,
   GenerateRequest,
   GenerateResponse,
 } from "../worker/generate.worker";
 
 type Status = "idle" | "generating" | "error";
+
+export type BulkGenerateParams = {
+  count: number;
+  types: readonly FileType[];
+};
 
 export function useGenerateFile() {
   const workerRef = useRef<Worker | null>(null);
@@ -27,6 +33,28 @@ export function useGenerateFile() {
     return workerRef.current;
   }, []);
 
+  const postToWorker = useCallback(
+    async (request: GenerateRequest | BulkGenerateRequest) => {
+      const worker = ensureWorker();
+      return new Promise<GenerateResponse>((resolve, reject) => {
+        const onMessage = (event: MessageEvent<GenerateResponse>) => {
+          worker.removeEventListener("message", onMessage);
+          worker.removeEventListener("error", onError);
+          resolve(event.data);
+        };
+        const onError = (event: ErrorEvent) => {
+          worker.removeEventListener("message", onMessage);
+          worker.removeEventListener("error", onError);
+          reject(new Error(event.message || "Worker error"));
+        };
+        worker.addEventListener("message", onMessage);
+        worker.addEventListener("error", onError);
+        worker.postMessage(request);
+      });
+    },
+    [ensureWorker],
+  );
+
   const generate = useCallback(
     async (params: GeneratorParams, locale: Locale = "ja") => {
       setStatus("generating");
@@ -39,6 +67,7 @@ export function useGenerateFile() {
         params.boundary,
       );
       const request: GenerateRequest = {
+        mode: "single",
         type: params.type,
         targetBytes,
         filename,
@@ -54,24 +83,7 @@ export function useGenerateFile() {
       };
 
       try {
-        const worker = ensureWorker();
-        const response = await new Promise<GenerateResponse>(
-          (resolve, reject) => {
-            const onMessage = (event: MessageEvent<GenerateResponse>) => {
-              worker.removeEventListener("message", onMessage);
-              worker.removeEventListener("error", onError);
-              resolve(event.data);
-            };
-            const onError = (event: ErrorEvent) => {
-              worker.removeEventListener("message", onMessage);
-              worker.removeEventListener("error", onError);
-              reject(new Error(event.message || "Worker error"));
-            };
-            worker.addEventListener("message", onMessage);
-            worker.addEventListener("error", onError);
-            worker.postMessage(request);
-          },
-        );
+        const response = await postToWorker(request);
 
         if (!response.ok) {
           throw new Error(response.error);
@@ -91,7 +103,38 @@ export function useGenerateFile() {
         setStatus("error");
       }
     },
-    [ensureWorker],
+    [postToWorker],
+  );
+
+  const generateBulk = useCallback(
+    async (params: BulkGenerateParams) => {
+      setStatus("generating");
+      setError(null);
+
+      const request: BulkGenerateRequest = {
+        mode: "bulk",
+        count: params.count,
+        types: [...params.types],
+        filename: buildBulkZipFilename(params.count),
+      };
+
+      try {
+        const response = await postToWorker(request);
+
+        if (!response.ok) {
+          throw new Error(response.error);
+        }
+
+        const blob = new Blob([response.buffer], { type: response.mimeType });
+        downloadBlob(blob, response.filename);
+        setStatus("idle");
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setError(message);
+        setStatus("error");
+      }
+    },
+    [postToWorker],
   );
 
   return {
@@ -99,6 +142,7 @@ export function useGenerateFile() {
     error,
     isGenerating: status === "generating",
     generate,
+    generateBulk,
     clearError: () => {
       setError(null);
       setStatus("idle");

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildFilename, isValidFilename } from "./filename";
+import {
+  buildBulkZipFilename,
+  buildFilename,
+  isValidBulkZipFilename,
+  isValidFilename,
+} from "./filename";
 
 describe("filename", () => {
   it("仕様どおりの名前を返す", () => {
@@ -20,5 +25,14 @@ describe("filename", () => {
     expect(isValidFilename("../etc/passwd")).toBe(false);
     expect(isValidFilename("chobitfile-99mb-exact.png")).toBe(false);
     expect(isValidFilename("chobitfile-1mb-exact.exe")).toBe(false);
+  });
+
+  it("大量生成 ZIP 名を組み立て・検証する", () => {
+    expect(buildBulkZipFilename(100)).toBe("chobitfile-bulk-100.zip");
+    expect(isValidBulkZipFilename("chobitfile-bulk-100.zip")).toBe(true);
+    expect(isValidBulkZipFilename("chobitfile-bulk-10000.zip")).toBe(true);
+    expect(isValidBulkZipFilename("chobitfile-bulk-0.zip")).toBe(false);
+    expect(isValidBulkZipFilename("chobitfile-bulk-10001.zip")).toBe(false);
+    expect(isValidBulkZipFilename("chobitfile-10mb-exact.png")).toBe(false);
   });
 });

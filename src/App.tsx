@@ -22,7 +22,7 @@ import { useGenerateFile } from "./hooks/useGenerateFile";
 import { useQueryParams } from "./hooks/useQueryParams";
 import { formatBytes, LocaleProvider, sizeOptionLabel, useT } from "./i18n";
 import type { Locale } from "./i18n/locales";
-import { buildFilename } from "./lib/filename";
+import { buildBulkZipFilename, buildFilename } from "./lib/filename";
 import { toGeneratorParams } from "./lib/query";
 import { targetBytesFor } from "./lib/sizes";
 import {
@@ -32,6 +32,7 @@ import {
   DEFAULT_BULK_COUNT,
   DEFAULT_BULK_TYPES,
   FILE_TYPE_LABELS,
+  FILE_TYPES,
   type FileType,
   type GenerateMode,
   SIZE_MB_OPTIONS,
@@ -58,7 +59,8 @@ export function App() {
 function AppInner() {
   const [params, setParams] = useQueryParams();
   const t = useT();
-  const { generate, isGenerating, error, clearError } = useGenerateFile();
+  const { generate, generateBulk, isGenerating, error, clearError } =
+    useGenerateFile();
 
   const [bulkCount, setBulkCount] = useState(DEFAULT_BULK_COUNT);
   const [bulkTypes, setBulkTypes] = useState<string[]>(() => [
@@ -67,6 +69,14 @@ function AppInner() {
 
   const target = targetBytesFor(params.sizeMb, params.boundary);
   const filename = buildFilename(params.type, params.sizeMb, params.boundary);
+  const selectedBulkTypes = useMemo(
+    () =>
+      bulkTypes.filter((value): value is FileType =>
+        (FILE_TYPES as readonly string[]).includes(value),
+      ),
+    [bulkTypes],
+  );
+  const canGenerateBulk = selectedBulkTypes.length > 0;
 
   const fileTypeOptions = useMemo(
     () => [
@@ -102,13 +112,10 @@ function AppInner() {
   );
 
   const bulkTypeLabels = useMemo(
-    () =>
-      bulkTypes
-        .filter((value): value is FileType => value in FILE_TYPE_LABELS)
-        .map((value) => FILE_TYPE_LABELS[value])
-        .join(", "),
-    [bulkTypes],
+    () => selectedBulkTypes.map((value) => FILE_TYPE_LABELS[value]).join(", "),
+    [selectedBulkTypes],
   );
+  const bulkZipFilename = buildBulkZipFilename(bulkCount);
 
   const cliGenerateExample = `${t.cli.generateComment}
 npx chobitfile -t pdf -s 10mb -o ./10mb.pdf`;
@@ -257,6 +264,7 @@ npm i -g chobitfile`;
                     step={1}
                     isIntegerOnly
                     units={t.bulk.form.countUnits}
+                    isDisabled={isGenerating}
                   />
 
                   <MultiSelector
@@ -267,6 +275,15 @@ npm i -g chobitfile`;
                     hasSelectAll
                     selectAllLabel={t.bulk.form.selectAll}
                     triggerDisplay="labels"
+                    isDisabled={isGenerating}
+                    status={
+                      canGenerateBulk
+                        ? undefined
+                        : {
+                            type: "error",
+                            message: t.bulk.form.typesRequired,
+                          }
+                    }
                   />
                 </FormLayout>
 
@@ -275,17 +292,37 @@ npm i -g chobitfile`;
                     {t.bulk.form.preview}
                   </Text>
                   <Text type="supporting" display="block" hasTabularNumbers>
-                    {bulkCount.toLocaleString(params.lang)}{" "}
+                    {bulkZipFilename} / {bulkCount.toLocaleString(params.lang)}{" "}
                     {t.bulk.form.previewFiles}
                     {bulkTypeLabels ? ` / ${bulkTypeLabels}` : ""}
                   </Text>
                 </VStack>
 
+                {error ? (
+                  <Banner
+                    status="error"
+                    title={t.errors.generateFailed}
+                    description={error}
+                    isDismissable
+                    onDismiss={clearError}
+                  />
+                ) : null}
+
                 <Button
-                  label={t.bulk.actions.generateComingSoon}
+                  label={
+                    isGenerating
+                      ? t.bulk.actions.generating
+                      : t.bulk.actions.generate
+                  }
                   variant="primary"
-                  isDisabled
-                  tooltip={t.bulk.actions.comingSoonTooltip}
+                  isLoading={isGenerating}
+                  isDisabled={isGenerating || !canGenerateBulk}
+                  onClick={() => {
+                    void generateBulk({
+                      count: bulkCount,
+                      types: selectedBulkTypes,
+                    });
+                  }}
                 />
               </>
             )}

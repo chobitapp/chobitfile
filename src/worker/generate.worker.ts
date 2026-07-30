@@ -1,8 +1,13 @@
-import { generateFile } from "../generators";
+import { generateBulkZip, generateFile } from "../generators";
 import { MIME_TYPES } from "../lib/types";
-import { type GenerateRequest, parseGenerateRequest } from "./validate-request";
+import {
+  type BulkGenerateRequest,
+  type GenerateRequest,
+  parseWorkerRequest,
+} from "./validate-request";
 
-export type { GenerateRequest };
+export type { WorkerRequest } from "./validate-request";
+export type { BulkGenerateRequest, GenerateRequest };
 
 export type GenerateResponse =
   | {
@@ -21,29 +26,57 @@ const workerScope = self as unknown as {
   onmessage: ((event: MessageEvent<unknown>) => void) | null;
 };
 
+function toTransferableBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  ) as ArrayBuffer;
+}
+
+async function handleSingle(
+  request: GenerateRequest,
+): Promise<GenerateResponse> {
+  const { type, targetBytes, filename, imageLabel } = request;
+  const bytes = await generateFile(type, targetBytes, { imageLabel });
+  if (bytes.byteLength !== targetBytes) {
+    throw new Error(
+      `Generated size mismatch: expected ${targetBytes}, got ${bytes.byteLength}`,
+    );
+  }
+  const buffer = toTransferableBuffer(bytes);
+  return {
+    ok: true,
+    buffer,
+    filename,
+    mimeType: MIME_TYPES[type],
+  };
+}
+
+async function handleBulk(
+  request: BulkGenerateRequest,
+): Promise<GenerateResponse> {
+  const bytes = await generateBulkZip({
+    count: request.count,
+    types: request.types,
+  });
+  const buffer = toTransferableBuffer(bytes);
+  return {
+    ok: true,
+    buffer,
+    filename: request.filename,
+    mimeType: "application/zip",
+  };
+}
+
 workerScope.onmessage = (event: MessageEvent<unknown>) => {
   void (async () => {
     try {
-      const { type, targetBytes, filename, imageLabel } = parseGenerateRequest(
-        event.data,
-      );
-      const bytes = await generateFile(type, targetBytes, { imageLabel });
-      if (bytes.byteLength !== targetBytes) {
-        throw new Error(
-          `Generated size mismatch: expected ${targetBytes}, got ${bytes.byteLength}`,
-        );
-      }
-      const buffer = bytes.buffer.slice(
-        bytes.byteOffset,
-        bytes.byteOffset + bytes.byteLength,
-      ) as ArrayBuffer;
-      const response: GenerateResponse = {
-        ok: true,
-        buffer,
-        filename,
-        mimeType: MIME_TYPES[type],
-      };
-      workerScope.postMessage(response, [buffer]);
+      const request = parseWorkerRequest(event.data);
+      const response =
+        request.mode === "bulk"
+          ? await handleBulk(request)
+          : await handleSingle(request);
+      workerScope.postMessage(response, [response.buffer]);
     } catch (error) {
       const response: GenerateResponse = {
         ok: false,
