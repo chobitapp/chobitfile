@@ -4,7 +4,7 @@
   "description": "Generate dummy files of a given size and format.",
   "type": "module",
   "bin": {
-    "chobitfile": "./dist-cli/index.js"
+    "chobitfile": "dist-cli/index.js"
   },
   "files": [
     "dist-cli",
