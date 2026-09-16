@@ -1,4 +1,13 @@
 allowBuilds:
+  "@astryxdesign/cli": true
+  "@astryxdesign/core": true
   esbuild: true
   sharp: true
   workerd: true
+minimumReleaseAgeExclude:
+  - '@astryxdesign/cli@0.6.2'
+  - '@astryxdesign/core@0.6.2'
+  - '@astryxdesign/theme-neutral@0.6.2'
+  - '@vitest/mocker@5.0.1'
+  - '@vitest/spy@5.0.1'
+  - vitest@5.0.1
