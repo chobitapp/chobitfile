@@ -13,7 +13,7 @@ export const FILE_TYPES = [
 ] as const;
 export type FileType = (typeof FILE_TYPES)[number];
 
-export const SIZE_MB_OPTIONS = [1, 3, 5, 10, 20] as const;
+export const SIZE_MB_OPTIONS = [1, 3, 5, 10, 20, 50, 100] as const;
 export type SizeMb = (typeof SIZE_MB_OPTIONS)[number];
 
 export const BOUNDARY_MODES = ["exact", "under", "over"] as const;

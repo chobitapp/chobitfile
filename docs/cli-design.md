@@ -16,7 +16,7 @@ Web 版とロジックを共通化した CLI 版の形式・配布・リポジ�
 | 項目 | 決定 |
 |---|---|
 | npm 公開 | **する**（パッケージ名 `chobitfile`、`npx chobitfile`） |
-| サイズ上限 | **Web と同じ**（最大 `20 MiB + 1` = `MAX_TARGET_BYTES`） |
+| サイズ上限 | **Web と同じ**（最大 `100 MiB + 1` = `MAX_TARGET_BYTES`） |
 | 任意サイズ | **CLI のみ**（`--size 2mb` / `512kb` / `--bytes N`）。Web はプリセット維持 |
 | 一括生成 | **現時点では不要**（単発 `generate` のみ） |
 | デフォルト引数 | Web と同じ（`png` / `1mb` / `exact`） |
@@ -297,7 +297,7 @@ pnpm dlx chobitfile generate -t png -s 1mb -b under
 
 ## 6. 上限・安全策（CLI 固有）
 
-Web は UI で 20MB まで。CLI は `--bytes` で実質無制限になり得る。
+Web は UI で 100MB まで。CLI は `--bytes` で実質無制限になり得る。
 
 提案:
 

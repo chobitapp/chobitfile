@@ -18,6 +18,15 @@ describe("query", () => {
       mode: "bulk",
       lang: "en",
     });
+    expect(
+      paramsFromSearch("?type=pdf&size=100&boundary=over&lang=en"),
+    ).toEqual({
+      type: "pdf",
+      sizeMb: 100,
+      boundary: "over",
+      mode: "size",
+      lang: "en",
+    });
   });
 
   it("falls back invalid values; lang uses browser locale", () => {

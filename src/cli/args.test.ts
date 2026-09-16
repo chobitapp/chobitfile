@@ -52,11 +52,11 @@ describe("parseCliArgs", () => {
     expect(() =>
       parseCliArgs(["--bytes", String(MAX_TARGET_BYTES + 1)]),
     ).toThrow(CliUsageError);
-    expect(() => parseCliArgs(["-s", "21mb"])).toThrow(CliUsageError);
+    expect(() => parseCliArgs(["-s", "101mb"])).toThrow(CliUsageError);
   });
 
-  it("上限ちょうど（20mb over）は許可", () => {
-    const args = parseCliArgs(["-s", "20mb", "-b", "over"]);
+  it("上限ちょうど（100mb over）は許可", () => {
+    const args = parseCliArgs(["-s", "100mb", "-b", "over"]);
     expect(args.targetBytes).toBe(MAX_TARGET_BYTES);
   });
 });

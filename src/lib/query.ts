@@ -36,7 +36,7 @@ function isGenerateMode(value: string): value is GenerateMode {
   return (GENERATE_MODES as readonly string[]).includes(value);
 }
 
-/** size クエリ（1 / 3 / 5 / 10 / 20）を SizeMb に変換する */
+/** size クエリ（1 / 3 / 5 / 10 / 20 / 50 / 100）を SizeMb に変換する */
 const parseAsSizeMb = createParser({
   parse(value) {
     const n = Number(value);

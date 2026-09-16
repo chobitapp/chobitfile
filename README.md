@@ -3,7 +3,7 @@
 Generate dummy files of a given size and format.
 
 Formats: PNG / JPEG / DOCX / XLSX / PPTX / PDF / TXT / CSV / JSON  
-Max size: 20 MB
+Max size: 100 MB
 
 - Web: https://chobitfile.nanabit.dev
 - CLI: `chobitfile`

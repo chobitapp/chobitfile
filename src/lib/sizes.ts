@@ -2,8 +2,8 @@ import type { BoundaryMode, SizeMb } from "./types";
 
 const MIB = 1024 * 1024;
 
-/** 生成可能な最大目標バイト数（20 MB + 1） */
-export const MAX_TARGET_BYTES = 20 * MIB + 1;
+/** 生成可能な最大目標バイト数（100 MB + 1） */
+export const MAX_TARGET_BYTES = 100 * MIB + 1;
 
 /** ラベル MB に対応するベースバイト数（1024 系） */
 export function baseBytesForMb(sizeMb: SizeMb): number {

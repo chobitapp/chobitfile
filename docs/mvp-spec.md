@@ -31,7 +31,7 @@
 | 項目 | 内容 |
 |---|---|
 | 形式 | PNG, JPEG, DOCX, XLSX, PPTX, PDF, TXT, CSV, JSON |
-| サイズ選択肢 | 1 / 3 / 5 / 10 / 20 MB |
+| サイズ選択肢 | 1 / 3 / 5 / 10 / 20 / 50 / 100 MB |
 | サイズ単位 | 1024 系。`1 MB = 1,048,576` バイト |
 | サイズ厳密性 | 生成ファイルのバイト数が目標値と **完全一致** |
 | 境界モード | `exact`（ちょうど） / `under`（−1 バイト） / `over`（+1 バイト） |
@@ -51,7 +51,7 @@ Web MVP と並行して npm CLI（`chobitfile`）を提供する。詳細は [CL
 | 項目 | 内容 |
 |---|---|
 | 形式・サイズ厳密性 | Web と同じ生成器 |
-| 上限 | Web と同じ（20 MB + 1） |
+| 上限 | Web と同じ（100 MB + 1） |
 | 任意サイズ | CLI のみ（`--size` / `--bytes`）。Web UI はプリセットのまま |
 | 一括生成 | 含めない |
 | デフォルト | `png` / `1mb` / `exact`（Web と同じ） |
@@ -81,6 +81,8 @@ Web MVP と並行して npm CLI（`chobitfile`）を提供する。詳細は [CL
 | 5 MB | 5,242,880 |
 | 10 MB | 10,485,760 |
 | 20 MB | 20,971,520 |
+| 50 MB | 52,428,800 |
+| 100 MB | 104,857,600 |
 
 UI にはラベルとバイト数を併記する（例: `1 MB（1,048,576 バイト）`）。
 
@@ -153,7 +155,7 @@ chobitfile-{sizeLabel}mb-{boundary}.{ext}
 - `chobitfile-5mb-over.pdf`
 - `chobitfile-3mb-exact.json`
 
-`sizeLabel` は 1 / 3 / 5 / 10 / 20。`boundary` は `exact` / `under` / `over`。
+`sizeLabel` は 1 / 3 / 5 / 10 / 20 / 50 / 100。`boundary` は `exact` / `under` / `over`。
 
 ---
 
@@ -162,7 +164,7 @@ chobitfile-{sizeLabel}mb-{boundary}.{ext}
 ### 6.1 レイアウト
 
 - 1 画面・設定パネル型
-- コントロール: 形式（Selector・セクション分け） / サイズ / 境界モード / 生成ボタン
+- コントロール: 形式（Selector・セクション分け） / サイズ（Selector） / 境界モード / 生成ボタン
 - 生成中は簡易プログレス（「生成中…」等）と操作の無効化
 - 成功時は Blob をダウンロード（`a[download]` 等）。File System Access API は使わない
 - 画面上部または近傍に、短い注記:
@@ -184,7 +186,7 @@ chobitfile-{sizeLabel}mb-{boundary}.{ext}
 | キー | 値 |
 |---|---|
 | `type` | `png` / `jpeg` / `docx` / `xlsx` / `pptx` / `pdf` / `txt` / `csv` / `json` |
-| `size` | `1` / `3` / `5` / `10` / `20` |
+| `size` | `1` / `3` / `5` / `10` / `20` / `50` / `100` |
 | `boundary` | `exact` / `under` / `over` |
 | `lang` | `ja` / `en`。未指定・不正時はブラウザの `navigator.languages` から判定（`en*` → `en`、`ja*` → `ja`、それ以外 → `ja`） |
 
@@ -268,3 +270,4 @@ UI の E2E とデプロイ後のブラウザ手動確認は必須にしない（
 | 2026-07-21 | CLI（npm）を追加。任意サイズは CLI のみ、上限は Web 準拠 |
 | 2026-07-21 | Web 日英 i18n（`lang` クエリ）。CLI は英語固定 |
 | 2026-07-21 | Web の `lang` 未指定時はブラウザ言語設定を参照 |
+| 2026-09-16 | サイズ上限を 100 MB に引き上げ。選択肢に 50 / 100 MB を追加。サイズ UI を Selector に変更 |

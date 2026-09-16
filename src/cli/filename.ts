@@ -12,7 +12,7 @@ function isSizeMb(n: number): n is SizeMb {
 
 /**
  * CLI のデフォルト出力ファイル名。
- * Web プリセット（1/3/5/10/20 MB + boundary）は Web と同じパターン。
+ * Web プリセット（1/3/5/10/20/50/100 MB + boundary）は Web と同じパターン。
  * それ以外の整数 MiB + boundary は `chobitfile-{n}mb-{boundary}.{ext}`。
  * 任意バイト指定などは `chobitfile-{bytes}b.{ext}`。
  */

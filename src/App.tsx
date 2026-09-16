@@ -9,7 +9,6 @@ import { HStack } from "@astryxdesign/core/HStack";
 import { Link } from "@astryxdesign/core/Link";
 import { MultiSelector } from "@astryxdesign/core/MultiSelector";
 import { NumberInput } from "@astryxdesign/core/NumberInput";
-import { RadioList, RadioListItem } from "@astryxdesign/core/RadioList";
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -126,6 +125,15 @@ function AppInner() {
     [t],
   );
 
+  const sizeOptions = useMemo(
+    () =>
+      SIZE_MB_OPTIONS.map((sizeMb) => ({
+        value: String(sizeMb),
+        label: sizeOptionLabel(sizeMb, params.lang),
+      })),
+    [params.lang],
+  );
+
   const bulkTypeLabels = useMemo(
     () => selectedBulkTypes.map((value) => FILE_TYPE_LABELS[value]).join(", "),
     [selectedBulkTypes],
@@ -204,7 +212,7 @@ npm i -g chobitfile`;
                     isDisabled={isGenerating}
                   />
 
-                  <RadioList
+                  <Selector
                     label={t.form.size}
                     value={String(params.sizeMb)}
                     onChange={(value) =>
@@ -213,17 +221,10 @@ npm i -g chobitfile`;
                         sizeMb: Number(value) as SizeMb,
                       })
                     }
+                    options={sizeOptions}
                     isDisabled={isGenerating}
                     description={t.form.sizeDescription}
-                  >
-                    {SIZE_MB_OPTIONS.map((sizeMb) => (
-                      <RadioListItem
-                        key={sizeMb}
-                        value={String(sizeMb)}
-                        label={sizeOptionLabel(sizeMb, params.lang)}
-                      />
-                    ))}
-                  </RadioList>
+                  />
 
                   <SegmentedControl
                     label={t.form.boundary}
