@@ -3,6 +3,7 @@
   "version": "0.1.4",
   "description": "Generate dummy files of a given size and format.",
   "type": "module",
+  "packageManager": "pnpm@11.22.0",
   "bin": {
     "chobitfile": "dist-cli/index.js"
   },

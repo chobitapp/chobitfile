@@ -29,3 +29,19 @@ npm i -g chobitfile
 | `--dry-run`      | Print plan without generating                                               |
 
 Help: `chobitfile --help`
+
+## Development and CI
+
+Use Node.js 26 and pnpm 11.22.0 (pinned in `package.json`).
+
+```bash
+pnpm install --frozen-lockfile
+pnpm lint
+pnpm test
+pnpm build
+pnpm build:cli
+```
+
+GitHub Actions runs these checks on pull requests, pushes to `main`, and manual
+dispatches. All actions are pinned to full commit SHAs with version comments.
+No repository secrets are required.
